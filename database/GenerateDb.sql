@@ -1,0 +1,60 @@
+CREATE TABLE Users (
+    Id INT PRIMARY KEY IDENTITY(1,1),
+    FullName NVARCHAR(100) NOT NULL,
+    BirthYear NVARCHAR(4),
+    Gender INT, 
+    Email NVARCHAR(100) NOT NULL UNIQUE,
+    HashedPassword NVARCHAR(255) NOT NULL,
+    AvatarPath NVARCHAR(255),
+    Address NVARCHAR(255),
+    Status INT
+);
+
+CREATE TABLE Categories (
+    Id INT PRIMARY KEY IDENTITY(1,1),
+    Name NVARCHAR(100) NOT NULL,
+    Slug NVARCHAR(100)
+);
+
+CREATE TABLE Products (
+    Id INT PRIMARY KEY IDENTITY(1,1),
+    Brand NVARCHAR(100) NOT NULL,
+    Model NVARCHAR(100) NOT NULL,
+    CategoryId INT NOT NULL,
+    Cpu NVARCHAR(100),
+    Ram NVARCHAR(50),
+    Vga NVARCHAR(100),
+    ScreenSize NVARCHAR(50),
+    HardDisk NVARCHAR(100),
+    Os NVARCHAR(50),
+    Price DECIMAL(18, 2) NOT NULL, 
+    Amount NVARCHAR(50),
+    Image NVARCHAR(255),
+    FOREIGN KEY (CategoryId) REFERENCES Categories(Id) ON DELETE CASCADE
+);
+
+CREATE TABLE Orders (
+    Id INT PRIMARY KEY IDENTITY(1,1),
+    UserId INT NOT NULL,
+    OrderDate DATETIME NOT NULL DEFAULT GETDATE(), 
+    TotalPrice DECIMAL(18, 2) NOT NULL, 
+    Payment INT,
+    Status INT,
+    FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
+);
+
+CREATE TABLE OrderDetails (
+    OrderId INT,
+    ProductId INT,
+    Quantity INT NOT NULL,
+    PRIMARY KEY (OrderId, ProductId),
+    FOREIGN KEY (OrderId) REFERENCES Orders(Id) ON DELETE CASCADE,
+    FOREIGN KEY (ProductId) REFERENCES Products(Id) ON DELETE CASCADE
+);
+
+CREATE TABLE Admins (
+    Id INT PRIMARY KEY IDENTITY(1,1),
+    Username NVARCHAR(50) NOT NULL UNIQUE, 
+    HashedPassword NVARCHAR(255) NOT NULL,
+    Role INT
+);
