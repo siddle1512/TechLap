@@ -1,0 +1,42 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - feature/*
+    paths:
+      - src/**/*.cs
+      - src/**/*.xaml
+      - src/**/*.csproj
+  pull_request:
+    branches:
+      - main
+      - dev
+      - feature/*
+    paths:
+      - src/**/*.cs
+      - src/**/*.xaml
+      - src/**/*.csproj
+
+jobs:
+  build:
+    name: Build with ${{ matrix.configuration }} on ${{ matrix.platform }}
+    runs-on: ${{ matrix.platform }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration:
+          - Debug
+          - Release
+        platform:
+          - windows-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Build source code
+        run: dotnet build ./TechLap.sln -c ${{ matrix.configuration }}

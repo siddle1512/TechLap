@@ -19,20 +19,52 @@ namespace TechLap.API.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<Category> Categories { get; set; }
 
+        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+        {
+            foreach (var entry in ChangeTracker.Entries<BaseModel>())
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        entry.Entity.CreatedDate = DateTime.UtcNow;
+                        break;
+                    case EntityState.Modified:
+                        entry.Entity.LastModifiedDate = DateTime.UtcNow;
+                        break;
+                }
+            }
+            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<OrderDetail>()
-                .HasKey(od => new { od.OrderId, od.ProductId });
+                .HasKey(o => new { o.OrderId, o.ProductId });
 
             modelBuilder.Entity<Order>()
                 .HasMany(o => o.OrderDetails)
-                .WithOne(od => od.Order)
-                .HasForeignKey(od => od.OrderId);
+                .WithOne(o => o.Order)
+                .HasForeignKey(o => o.OrderId);
 
             modelBuilder.Entity<Product>()
-                .HasMany(p => p.OrderDetails)
-                .WithOne(od => od.Product)
-                .HasForeignKey(od => od.ProductId);
+                .HasMany(o => o.OrderDetails)
+                .WithOne(o => o.Product)
+                .HasForeignKey(o => o.ProductId);
+
+            modelBuilder.Entity<User>()
+                .HasMany(o => o.Orders)
+                .WithOne(o => o.User)
+                .HasForeignKey(o => o.UserId);
+
+            modelBuilder.Entity<Category>()
+                .HasMany(o => o.Products)
+                .WithOne(o => o.Category)
+                .HasForeignKey(o => o.CategoryId);
+
+            modelBuilder.Entity<Discount>()
+                .HasMany(o => o.Orders)
+                .WithOne(o => o.Discount)
+                .HasForeignKey(o => o.DiscountId);
         }
     }
 }
