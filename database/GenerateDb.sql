@@ -1,60 +1,86 @@
-CREATE TABLE Users (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    FullName NVARCHAR(100) NOT NULL,
-    BirthYear NVARCHAR(4),
-    Gender INT, 
-    Email NVARCHAR(100) NOT NULL UNIQUE,
-    HashedPassword NVARCHAR(255) NOT NULL,
-    AvatarPath NVARCHAR(255),
-    Address NVARCHAR(255),
-    Status INT
+CREATE TABLE Admins (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Username NVARCHAR(MAX) NOT NULL,
+    HashedPassword NVARCHAR(MAX) NOT NULL,
+    Role INT NOT NULL,
+    CreatedDate DATETIME2 NOT NULL,
+    LastModifiedDate DATETIME2 NOT NULL
 );
 
 CREATE TABLE Categories (
-    Id INT PRIMARY KEY IDENTITY(1,1),
+    Id INT IDENTITY(1,1) PRIMARY KEY,
     Name NVARCHAR(100) NOT NULL,
-    Slug NVARCHAR(100)
+    Slug NVARCHAR(255) NOT NULL,
+    CreatedDate DATETIME2 NOT NULL,
+    LastModifiedDate DATETIME2 NOT NULL
+);
+
+CREATE TABLE Discount (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    DiscountCode NVARCHAR(MAX) NOT NULL,
+    DiscountPercentage DECIMAL(18,2) NOT NULL,
+    StartDate DATETIME2 NOT NULL,
+    EndDate DATETIME2 NOT NULL,
+    UsageLimit INT NOT NULL,
+    TimesUsed INT NOT NULL,
+    Status INT NOT NULL,
+    CreatedDate DATETIME2 NOT NULL,
+    LastModifiedDate DATETIME2 NOT NULL
+);
+
+CREATE TABLE Users (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    FullName NVARCHAR(255) NOT NULL,
+    BirthYear DATETIME2 NOT NULL,
+    Gender INT NOT NULL,
+    Email NVARCHAR(255) NOT NULL,
+    HashedPassword NVARCHAR(255) NOT NULL,
+    AvatarPath NVARCHAR(MAX) NOT NULL,
+    Address NVARCHAR(255) NOT NULL,
+    Status INT NOT NULL,
+    CreatedDate DATETIME2 NOT NULL,
+    LastModifiedDate DATETIME2 NOT NULL
 );
 
 CREATE TABLE Products (
-    Id INT PRIMARY KEY IDENTITY(1,1),
+    Id INT IDENTITY(1,1) PRIMARY KEY,
     Brand NVARCHAR(100) NOT NULL,
     Model NVARCHAR(100) NOT NULL,
     CategoryId INT NOT NULL,
-    Cpu NVARCHAR(100),
-    Ram NVARCHAR(50),
-    Vga NVARCHAR(100),
-    ScreenSize NVARCHAR(50),
-    HardDisk NVARCHAR(100),
-    Os NVARCHAR(50),
-    Price DECIMAL(18, 2) NOT NULL, 
-    Amount NVARCHAR(50),
-    Image NVARCHAR(255),
+    Cpu NVARCHAR(100) NOT NULL,
+    Ram NVARCHAR(50) NOT NULL,
+    Vga NVARCHAR(100) NOT NULL,
+    ScreenSize NVARCHAR(50) NOT NULL,
+    HardDisk NVARCHAR(100) NOT NULL,
+    Os NVARCHAR(50) NOT NULL,
+    Price DECIMAL(12,0) NOT NULL,
+    Stock INT NOT NULL,
+    Image NVARCHAR(MAX) NOT NULL,
+    CreatedDate DATETIME2 NOT NULL,
+    LastModifiedDate DATETIME2 NOT NULL,
     FOREIGN KEY (CategoryId) REFERENCES Categories(Id) ON DELETE CASCADE
 );
 
 CREATE TABLE Orders (
-    Id INT PRIMARY KEY IDENTITY(1,1),
+    Id INT IDENTITY(1,1) PRIMARY KEY,
     UserId INT NOT NULL,
-    OrderDate DATETIME NOT NULL DEFAULT GETDATE(), 
-    TotalPrice DECIMAL(18, 2) NOT NULL, 
-    Payment INT,
-    Status INT,
-    FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
+    OrderDate DATETIME2 NOT NULL,
+    TotalPrice DECIMAL(12,0) NOT NULL,
+    Payment INT NOT NULL,
+    Status INT NOT NULL,
+    DiscountId INT NULL,
+    CreatedDate DATETIME2 NOT NULL,
+    LastModifiedDate DATETIME2 NOT NULL,
+    FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE,
+    FOREIGN KEY (DiscountId) REFERENCES Discount(Id)
 );
 
 CREATE TABLE OrderDetails (
-    OrderId INT,
-    ProductId INT,
+    OrderId INT NOT NULL,
+    ProductId INT NOT NULL,
     Quantity INT NOT NULL,
+    Price DECIMAL(12,0) NOT NULL,
     PRIMARY KEY (OrderId, ProductId),
     FOREIGN KEY (OrderId) REFERENCES Orders(Id) ON DELETE CASCADE,
     FOREIGN KEY (ProductId) REFERENCES Products(Id) ON DELETE CASCADE
-);
-
-CREATE TABLE Admins (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    Username NVARCHAR(50) NOT NULL UNIQUE, 
-    HashedPassword NVARCHAR(255) NOT NULL,
-    Role INT
 );

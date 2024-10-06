@@ -36,4 +36,10 @@
         Manager,
         Staff
     }
+
+    public enum DiscountStatus
+    {
+        Active,
+        Inactive
+    }
 }
