@@ -15,7 +15,7 @@ CREATE TABLE Categories (
     LastModifiedDate DATETIME2 NOT NULL
 );
 
-CREATE TABLE Discount (
+CREATE TABLE Discounts (
     Id INT IDENTITY(1,1) PRIMARY KEY,
     DiscountCode NVARCHAR(MAX) NOT NULL,
     DiscountPercentage DECIMAL(18,2) NOT NULL,
