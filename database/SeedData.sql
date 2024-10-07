@@ -31,7 +31,6 @@ VALUES
 ('Asus', 'ZenBook 14', 1, 'Intel i5', '8GB', 'NVIDIA GTX 1650', '14"', '512GB SSD', 'Windows 10', 18000.00, 20, '/images/zenbook14.png', GETDATE(), GETDATE()),
 ('Dell', 'Inspiron 15', 1, 'Intel i7', '16GB', 'NVIDIA MX250', '15.6"', '1TB HDD', 'Windows 10', 15000.00, 15, '/images/inspiron15.png', GETDATE(), GETDATE()),
 ('Samsung', 'Galaxy Tab S7', 3, 'Qualcomm Snapdragon 865+', '8GB', 'Adreno 650', '11"', '128GB', 'Android', 12000.00, 30, '/images/galaxy_tab_s7.png', GETDATE(), GETDATE()),
-('Logitech', 'M330 Silent', 4, NULL, NULL, NULL, NULL, NULL, NULL, 300.00, 100, '/images/m330.png', GETDATE(), GETDATE());
 
 -- Seed Orders
 INSERT INTO Orders (UserId, OrderDate, TotalPrice, Payment, Status, DiscountId, CreatedDate, LastModifiedDate)
