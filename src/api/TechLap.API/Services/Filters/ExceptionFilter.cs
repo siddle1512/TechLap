@@ -15,16 +15,22 @@ namespace TechLap.API.Services.Filters
         public void OnException(ExceptionContext context)
         {
             var statusCode = StatusCodes.Status500InternalServerError;
+            var messgae = context.Exception.Message;
+            var stackTrace = context.Exception.StackTrace;
 
             if (context.Exception is NotFoundException)
             {
                 statusCode = StatusCodes.Status404NotFound;
             }
+            if (context.Exception is BadRequestException)
+            {
+                statusCode = StatusCodes.Status400BadRequest;
+            }
 
-            _logger.LogInformation("erroMsg: " + context.Exception.Message);
-            _logger.LogInformation("stackTrace: " + context.Exception.StackTrace?.ToString());
+            _logger.LogInformation("erroMsg: " + messgae);
+            _logger.LogInformation("stackTrace: " + stackTrace?.ToString());
 
-            context.Result = new JsonResult(new { IsSuccess = false })
+            context.Result = new JsonResult(new { Message = messgae, IsSuccess = false })
             {
                 StatusCode = statusCode
             };
