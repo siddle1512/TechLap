@@ -18,7 +18,7 @@ namespace TechLap.API.Controllers
 
         [HttpGet]
         [Route("/api/products")]
-        [Authorize(Roles = "User")]
+        [Authorize(Roles = "User, Admin")]
         public async Task<IActionResult> GetProducts([FromQuery] ProductRequest request)
         {
             var products = await _productRepository.GetAllAsync(p => p.Model.ToLower().Contains(request.model.ToLower()));

@@ -13,9 +13,19 @@ namespace TechLap.API.Services.Repositories.Repositories
         {
         }
 
-        public Task<User> AddAsync(User entity)
+        public async Task<User> AddAsync(User entity)
         {
-            throw new NotImplementedException();
+            var userList = await _dbContext.Users.Where(o => o.Email.ToLower().Contains(entity.Email.ToLower())).ToListAsync();
+
+            if (userList.Any())
+            {
+                throw new BadRequestException("Email has existed");
+            }
+
+            entity.HashedPassword = HashPassword(entity.HashedPassword);
+            await _dbContext.Users.AddAsync(entity);
+            await _dbContext.SaveChangesAsync();
+            return entity;
         }
 
         public Task<bool> DeleteAsync(User entity)
@@ -23,9 +33,14 @@ namespace TechLap.API.Services.Repositories.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<IReadOnlyList<User>> GetAllAsync(Expression<Func<User, bool>> predicate)
+        public async Task<IReadOnlyList<User>> GetAllAsync(Expression<Func<User, bool>> predicate)
         {
-            throw new NotImplementedException();
+            var users = await _dbContext.Users.Where(predicate).ToListAsync();
+            if (!users.Any())
+            {
+                throw new NotFoundException("Not found any users");
+            }
+            return await _dbContext.Users.Where(predicate).ToListAsync();
         }
 
         public Task<User?> GetByIdAsync(int id)
@@ -33,25 +48,27 @@ namespace TechLap.API.Services.Repositories.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<bool> UpdateAsync(User entity)
+        public async Task<bool> UpdateAsync(User entity)
         {
-            throw new NotImplementedException();
+            _dbContext.Users.Entry(entity).State = EntityState.Modified;
+            return await _dbContext.SaveChangesAsync() > 0;
         }
 
         public async Task<User> UserLogin(string email, string password)
         {
             string hashedPassword = HashPassword(password);
-            var user = await _dbContext.Users.Where(o => o.Email.Equals(email) && o.HashedPassword.Equals(hashedPassword)).FirstAsync();
 
-            if (user == null)
+            var userList = await _dbContext.Users.Where(o => o.Email.Equals(email) && o.HashedPassword.Equals(hashedPassword)).ToListAsync();
+
+            if (!userList.Any())
             {
                 throw new BadRequestException("Wrong email or password");
             }
-            if (user.Status != Enums.UserStatus.Active)
+            if (userList.First().Status != Enums.UserStatus.Active)
             {
                 throw new BadRequestException("User account is not active");
             }
-            return user;
+            return userList.First();
         }
     }
 }

@@ -9,7 +9,7 @@ namespace TechLap.API.Services.Repositories.Repositories
 
         public RepositoryBase(TechLapContext dbContext)
         {
-            _dbContext = dbContext;
+            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
         protected string HashPassword(string? password)

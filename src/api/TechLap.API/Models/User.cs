@@ -18,6 +18,8 @@ namespace TechLap.API.Models
         [MaxLength(255)]
         public string Email { get; set; } = string.Empty;
         [Required]
+        public string PhoneNumber { get; set; } = string.Empty;
+        [Required]
         [MaxLength(255)]
         public string HashedPassword { get; set; } = string.Empty;
         [Column(TypeName = "nvarchar(max)")]
