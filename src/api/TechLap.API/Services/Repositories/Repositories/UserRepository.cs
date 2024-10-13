@@ -40,12 +40,17 @@ namespace TechLap.API.Services.Repositories.Repositories
             {
                 throw new NotFoundException("Not found any users");
             }
-            return await _dbContext.Users.Where(predicate).ToListAsync();
+            return users;
         }
 
-        public Task<User?> GetByIdAsync(int id)
+        public async Task<User?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            var user = await _dbContext.Users.Where(o => o.Id == id).FirstOrDefaultAsync();
+            if (user == null)
+            {
+                throw new NotFoundException("Not found any users with id: " + id);
+            }
+            return user;
         }
 
         public async Task<bool> UpdateAsync(User entity)
@@ -58,17 +63,17 @@ namespace TechLap.API.Services.Repositories.Repositories
         {
             string hashedPassword = HashPassword(password);
 
-            var userList = await _dbContext.Users.Where(o => o.Email.Equals(email) && o.HashedPassword.Equals(hashedPassword)).ToListAsync();
+            var user = await _dbContext.Users.Where(o => o.Email.Equals(email) && o.HashedPassword.Equals(hashedPassword)).FirstOrDefaultAsync();
 
-            if (!userList.Any())
+            if (user == null)
             {
                 throw new BadRequestException("Wrong email or password");
             }
-            if (userList.First().Status != Enums.UserStatus.Active)
+            if (user.Status != Enums.UserStatus.Active)
             {
-                throw new BadRequestException("User account is not active");
+                throw new BadRequestException("User account is " + user.Status.ToString());
             }
-            return userList.First();
+            return user;
         }
     }
 }

@@ -2,11 +2,12 @@
 
 namespace TechLap.API.DTOs.Requests
 {
-    public record UserRequest(
+    public record CreateUserRequest(
         string FullName,
         DateTime BirthYear,
         Gender Gender,
         string Email,
+        string PhoneNumber,
         string HashedPassword,
         string AvatarPath,
         string Address,

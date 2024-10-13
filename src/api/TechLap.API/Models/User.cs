@@ -18,6 +18,8 @@ namespace TechLap.API.Models
         [MaxLength(255)]
         public string Email { get; set; } = string.Empty;
         [Required]
+        [StringLength(10, MinimumLength = 10)]
+        [RegularExpression(@"^0[1-9]\d{8}$")]
         public string PhoneNumber { get; set; } = string.Empty;
         [Required]
         [MaxLength(255)]

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using TechLap.API.DTOs.Requests;
+using TechLap.API.DTOs.Responses.UserDTOs;
 using TechLap.API.Models;
 
 namespace TechLap.API.Mapper.MappingProfiles
@@ -8,7 +9,8 @@ namespace TechLap.API.Mapper.MappingProfiles
     {
         public UserMappingProfile()
         {
-            CreateMap<User, UserRequest>().ReverseMap();
+            CreateMap<User, CreateUserRequest>().ReverseMap();
+            CreateMap<User, UserResponse>().ReverseMap();
         }
     }
 }
