@@ -7,7 +7,7 @@ namespace TechLap.API.Validators
     {
         public ProductRequestValidator()
         {
-            RuleFor(o => o.model)
+            RuleFor(o => o.Model)
                 .MaximumLength(70)
                 .WithMessage("{Model} must not exceed 70 characters");
         }

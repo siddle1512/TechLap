@@ -7,7 +7,7 @@ namespace TechLap.API.Models
     public class User : BaseModel
     {
         [Required]
-        [MaxLength(255)]
+        [MaxLength(100)]
         public string FullName { get; set; } = string.Empty;
         [Required]
         public DateTime BirthYear { get; set; }
@@ -26,7 +26,7 @@ namespace TechLap.API.Models
         public string HashedPassword { get; set; } = string.Empty;
         [Column(TypeName = "nvarchar(max)")]
         public string AvatarPath { get; set; } = string.Empty;
-        [MaxLength(255)]
+        [Column(TypeName = "nvarchar(max)")]
         public string Address { get; set; } = string.Empty;
         [Required]
         public UserStatus Status { get; set; }

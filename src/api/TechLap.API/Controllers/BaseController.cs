@@ -12,6 +12,29 @@ namespace TechLap.API.Controllers
     [ApiController]
     public class BaseController<T> : ControllerBase where T : BaseController<T>
     {
+        protected BadRequestObjectResult ValidateRequest<TRequest, TResponse>(TRequest request)
+        {
+            if (request == null)
+            {
+                return BadRequest(new ApiResponse<TResponse>
+                {
+                    IsSuccess = false,
+                    Message = "Request cannot be null."
+                });
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ApiResponse<TResponse>
+                {
+                    IsSuccess = false,
+                    Message = "Invalid request."
+                });
+            }
+
+            return null!;
+        }
+
         protected IActionResult CreateResponse<Response>(bool isSuccess, string message, HttpStatusCode statusCode, Response? data = default)
         {
             var apiResponse = new ApiResponse<Response>

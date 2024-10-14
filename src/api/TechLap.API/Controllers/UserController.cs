@@ -29,7 +29,7 @@ namespace TechLap.API.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpGet]
-        [Route("/api/user")]
+        [Route("/api/users")]
         public async Task<IActionResult> GetUsers()
         {
             var users = await _userRepository.GetAllAsync(o => true);

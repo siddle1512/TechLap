@@ -1,3 +1,5 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -9,6 +11,7 @@ using TechLap.API.Mapper.MappingProfiles;
 using TechLap.API.Services.Filters;
 using TechLap.API.Services.Repositories.IRepositories;
 using TechLap.API.Services.Repositories.Repositories;
+using TechLap.API.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 var jwtSettings = builder.Configuration.GetSection("JWT");
@@ -20,6 +23,10 @@ builder.Services.AddControllers(cfg =>
 {
     cfg.Filters.Add(typeof(ExceptionFilter));
 });
+
+//Validatior
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<UserRequestValidator>();
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -92,6 +99,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
