@@ -3,9 +3,9 @@ using TechLap.API.DTOs.Requests;
 
 namespace TechLap.API.Validators
 {
-    public class ProductRequestValidator :  AbstractValidator<ProductRequest>
+    public class ProductRequestValidator : AbstractValidator<ProductRequest>
     {
-        public ProductRequestValidator() 
+        public ProductRequestValidator()
         {
             RuleFor(o => o.Model)
                 .MaximumLength(70)

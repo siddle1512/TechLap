@@ -29,7 +29,7 @@ namespace TechLap.API.Services.Repositories.Repositories
         public async Task<IReadOnlyList<Product>> GetAllAsync(Expression<Func<Product, bool>> predicate)
         {
             var products = await _dbContext.Products.Where(predicate).ToListAsync();
-            if(!products.Any())
+            if (!products.Any())
             {
                 throw new NotFoundException("");
             }

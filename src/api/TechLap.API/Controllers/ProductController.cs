@@ -10,6 +10,7 @@ namespace TechLap.API.Controllers
     public class ProductController : BaseController<ProductController>
     {
         private IProductRepository _productRepository;
+
         public ProductController(IProductRepository productRepository)
         {
             _productRepository = productRepository;
@@ -19,10 +20,9 @@ namespace TechLap.API.Controllers
         [Route("/api/products")]
         public async Task<IActionResult> GetProducts([FromQuery] ProductRequest request)
         {
-            var products = await _productRepository.GetAllAsync(p => p.Model == request.Model);
+            var products = await _productRepository.GetAllAsync(p => p.Model.ToLower().Contains(request.Model.ToLower()));
             var response = LazyMapper.Mapper.Map<IEnumerable<ProductResponse>>(products);
             return CreateResponse<IEnumerable<ProductResponse>>(true, "Request processed successfully.", HttpStatusCode.OK, response);
         }
-
     }
 }
