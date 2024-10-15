@@ -12,6 +12,7 @@ namespace TechLap.API.Mapper
                 cfg.ShouldMapProperty = p => p.GetMethod?.IsPublic == true || p.GetMethod?.IsAssembly == true;
 
                 cfg.AddProfile<ProductMappingProfile>();
+                cfg.AddProfile<DiscountMappingProfile>();
                 cfg.AddProfile<UserMappingProfile>();
                 cfg.AddProfile<OrderMappingProfile>();
             });
