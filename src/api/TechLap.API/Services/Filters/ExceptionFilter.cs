@@ -26,6 +26,10 @@ namespace TechLap.API.Services.Filters
             {
                 statusCode = StatusCodes.Status400BadRequest;
             }
+            if (context.Exception is AuthenticationException)
+            {
+                statusCode = StatusCodes.Status401Unauthorized;
+            }
 
             _logger.LogInformation("erroMsg: " + messgae);
             _logger.LogInformation("stackTrace: " + stackTrace?.ToString());
