@@ -5,6 +5,7 @@ using System.Net;
 using System.Security.Claims;
 using System.Text;
 using TechLap.API.Configurations;
+using TechLap.API.Exceptions;
 
 namespace TechLap.API.Controllers
 {
@@ -39,6 +40,16 @@ namespace TechLap.API.Controllers
                 signingCredentials: signinCredentials
             );
             return new JwtSecurityTokenHandler().WriteToken(tokenOptions);
+        }
+
+        protected int? GetUserIdFromToken()
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                throw new AuthenticationException("Unauthorized: User ID not found or invalid.");
+            }
+            return userId;
         }
     }
 }
