@@ -10,8 +10,11 @@ using TechLap.API.Data;
 using TechLap.API.Mapper.MappingProfiles;
 using TechLap.API.Services.Filters;
 using TechLap.API.Services.Repositories.IRepositories;
+using TechLap.API.Services.Repositories.IRepositories.Discounts;
 using TechLap.API.Services.Repositories.Repositories;
+using TechLap.API.Services.Repositories.Repositories.Discounts;
 using TechLap.API.Validators;
+using TechLap.API.Validators.DiscountsValidators;
 
 var builder = WebApplication.CreateBuilder(args);
 var jwtSettings = builder.Configuration.GetSection("JWT");
@@ -27,6 +30,9 @@ builder.Services.AddControllers(cfg =>
 //Validatior
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<UserRequestValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<AddDiscountRequestValidators>();
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateDiscountValidators>();
+builder.Services.AddValidatorsFromAssemblyContaining<ApplyDiscountValidators>();
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -89,6 +95,7 @@ builder.Services.AddAutoMapper(typeof(ProductMappingProfile));
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
 
 var app = builder.Build();
 
