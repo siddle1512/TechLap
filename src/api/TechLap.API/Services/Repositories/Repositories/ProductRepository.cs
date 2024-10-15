@@ -12,38 +12,43 @@ namespace TechLap.API.Services.Repositories.Repositories
         public ProductRepository(TechLapContext dbContext) : base(dbContext)
         {
         }
-
-        public async Task<Product> AddAsync(Product entity)
+        public async Task<bool> IsCategoryValidAsync(int categoryId)
         {
-            await _dbContext.Products.AddAsync(entity);
-            await _dbContext.SaveChangesAsync();
-            return entity;
+            return await _dbContext.Categories.AnyAsync(c => c.Id == categoryId);
         }
-
-        public async Task<bool> DeleteAsync(Product entity)
-        {
-            _dbContext.Products.Remove(entity);
-            return await _dbContext.SaveChangesAsync() > 0;
-        }
-
-        public async Task<IReadOnlyList<Product>> GetAllAsync(Expression<Func<Product, bool>> predicate)
-        {
-            var products = await _dbContext.Products.Where(predicate).ToListAsync();
-            if (!products.Any())
-            {
-                throw new NotFoundException("");
-            }
-            return await _dbContext.Products.Where(predicate).ToListAsync();
-        }
-
         public async Task<Product?> GetByIdAsync(int id)
         {
             return await _dbContext.Products.FindAsync(id);
         }
 
+        public async Task<IReadOnlyList<Product>> GetProductsByConditionAsync(Expression<Func<Product, bool>> predicate)
+        {
+            return await _dbContext.Products.Where(predicate).ToListAsync();
+        }
+
+        public async Task<Product> AddAsync(Product entity)
+        {
+            try
+            {
+                await _dbContext.Products.AddAsync(entity);
+                await _dbContext.SaveChangesAsync();
+                return entity;
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new Exception($"Error while adding product: {ex.InnerException?.Message ?? ex.Message}");
+            }
+        }
+
         public async Task<bool> UpdateAsync(Product entity)
         {
             _dbContext.Entry(entity).State = EntityState.Modified;
+            return await _dbContext.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> DeleteAsync(Product entity)
+        {
+            _dbContext.Products.Remove(entity);
             return await _dbContext.SaveChangesAsync() > 0;
         }
     }

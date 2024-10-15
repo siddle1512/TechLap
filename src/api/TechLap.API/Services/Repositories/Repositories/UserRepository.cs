@@ -61,7 +61,7 @@ namespace TechLap.API.Services.Repositories.Repositories
 
         public async Task<User> UserLogin(string email, string password)
         {
-            string hashedPassword = HashPassword(password);
+                string hashedPassword = HashPassword(password);
 
             var user = await _dbContext.Users.Where(o => o.Email.Equals(email) && o.HashedPassword.Equals(hashedPassword)).FirstOrDefaultAsync();
 
