@@ -13,6 +13,7 @@ namespace TechLap.API.Mapper
 
                 cfg.AddProfile<ProductMappingProfile>();
                 cfg.AddProfile<UserMappingProfile>();
+                cfg.AddProfile<OrderMappingProfile>();
             });
 
             return config.CreateMapper();
