@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Net;
 using TechLap.API.DTOs.Requests;
 using TechLap.API.DTOs.Responses.ProductDTOs;
+using TechLap.API.Exceptions;
 using TechLap.API.Mapper;
 using TechLap.API.Models;
 using TechLap.API.Services.Repositories.IRepositories;
@@ -40,7 +41,7 @@ namespace TechLap.API.Controllers
                 var isCategoryValid = await _productRepository.IsCategoryValidAsync(request.CategoryId);
                 if (!isCategoryValid)
                 {
-                    return CreateResponse<ProductResponse>(false, $"Category with ID {request.CategoryId} does not exist.", HttpStatusCode.BadRequest);
+                    throw new BadRequestException($"Category with ID {request.CategoryId} does not exist.");
                 }
 
                 // If CategoryId is valid, proceed to add product
@@ -67,26 +68,24 @@ namespace TechLap.API.Controllers
         [Route("/api/products/{id}")]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductRequest request)
         {
-            try
-            {
                 // Ensure the request model is valid
                 if (!ModelState.IsValid)
                 {
-                    return CreateResponse(false, "Invalid request data.", HttpStatusCode.BadRequest, ModelState);
+                    throw new BadRequestException("Invalid request data.");
                 }
 
-                // Fetch the existing product by ID
-                var existingProduct = await _productRepository.GetByIdAsync(id);
+            // Fetch the existing product by ID
+            var existingProduct = await _productRepository.GetByIdAsync(id);
                 if (existingProduct == null)
                 {
-                    return CreateResponse<ProductResponse>(false, $"Product with ID {id} does not exist.", HttpStatusCode.NotFound);
+                    throw new NotFoundException($"Product with ID {id} does not exist.");
                 }
 
-                // Ensure the CategoryId exists             
-                var categoryExists = await _productRepository.IsCategoryValidAsync(request.CategoryId);
-                if (categoryExists == null)
+            // Ensure the CategoryId exists             
+            var categoryExists = await _productRepository.IsCategoryValidAsync(request.CategoryId);
+                if (!categoryExists)
                 {
-                    return CreateResponse<ProductResponse>(false, $"Category with ID {request.CategoryId} does not exist.", HttpStatusCode.BadRequest);
+                    throw new BadRequestException($"Category with ID {request.CategoryId} does not exist.");
                 }
 
                 // Map request data to the existing product
@@ -98,17 +97,6 @@ namespace TechLap.API.Controllers
                 // Map the updated product to the response model
                 var response = LazyMapper.Mapper.Map<ProductResponse>(updatedProduct);
                 return CreateResponse(true, "Product updated successfully.", HttpStatusCode.OK, response);
-            }
-            catch (DbUpdateException dbEx)
-            {
-                // Capture detailed error if database update fails
-                return CreateResponse<ProductResponse>(false, $"Database error: {dbEx.InnerException?.Message ?? dbEx.Message}", HttpStatusCode.InternalServerError);
-            }
-            catch (Exception ex)
-            {
-                // Generic error handling for other exceptions
-                return CreateResponse<ProductResponse>(false, $"An error occurred while updating the product: {ex.Message}", HttpStatusCode.InternalServerError);
-            }
         }
 
 
@@ -117,13 +105,11 @@ namespace TechLap.API.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
-            try
-            {
                 // Check if the product exists
                 var existingProduct = await _productRepository.GetByIdAsync(id);
                 if (existingProduct == null)
                 {
-                    return NotFound($"Product with ID {id} does not exist.");
+                    throw new NotFoundException($"Product with ID {id} does not exist.");
                 }
 
                 // Delete the product
@@ -131,12 +117,6 @@ namespace TechLap.API.Controllers
 
                 // Optionally, return a success message
                 return Ok(new { message = "Product deleted successfully." });
-            }
-            catch (Exception ex)
-            {
-                // Handle any unexpected errors
-                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while deleting the product: {ex.Message}");
-            }
         }
 
         [HttpPost]
