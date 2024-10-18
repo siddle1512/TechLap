@@ -8,20 +8,24 @@ using System.Windows;
 namespace TechLap.WPF
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for LoginWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class LoginWindow : Window
     {
-        public MainWindow()
+        public LoginWindow()
         {
             InitializeComponent();
         }
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        private async void btnLogin_Click(object sender, RoutedEventArgs e)
         {
-            try { 
+            try
+            {
+                // Hiển thị progress bar
+                progressBar.Visibility = Visibility.Visible;
+
                 var username = txtUsername.Text;
-                var password = txtPassword.Text;
+                var password = txtPassword.Password;
 
                 // Create HttpClient 
                 var client = new HttpClient();
@@ -30,7 +34,7 @@ namespace TechLap.WPF
                 StringContent data = new StringContent(content, Encoding.UTF8, "application/json");
 
                 // Send request to API
-                HttpResponseMessage response = await client.PostAsync(ConfigurationManager.AppSettings["ApiEndpoint"] + "/api/admins/login", data);
+                HttpResponseMessage response = await client.PostAsync(ConfigurationManager.AppSettings["ApiEndpoint"] + "/api/user/login", data);
                 response.EnsureSuccessStatusCode();
                 string responseBody = await response.Content.ReadAsStringAsync();
 
@@ -41,15 +45,24 @@ namespace TechLap.WPF
                 {
                     if (jsonResponse["isSuccess"].Value<bool>())
                     {
-                        MessageBox.Show("Login successfully");
+                        //MessageBox.Show("Login successfully");
                         GlobalState.Token = jsonResponse["data"].Value<string>();
+                        Dashboard adminDashboard = new Dashboard();
+                        adminDashboard.Show();
+                        Close();
                     }
                 }
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
-
+            finally
+            {
+                // Ẩn progress bar sau khi xử lý xong
+                progressBar.Visibility = Visibility.Collapsed;
+            }
         }
+
     }
 }
