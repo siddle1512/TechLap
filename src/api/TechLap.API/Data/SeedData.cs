@@ -17,8 +17,9 @@ namespace TechLap.API.Data
                     return;
                 }
 
+                //Password: Admin@@
                 context.Admins.Add(
-                    new Admin { Username = "Admin", HashedPassword = "bL2WlNy4Dm0s0pX88f11WJm0hJ+uZKzIkMFrfs78Mnw=", Role = AdminRole.SuperAdmin }
+                    new Admin { Username = "Admin", HashedPassword = "5rN5po7B+Hf0KLUY5IOr+GxkiqqxbEbD8QV3ipEdojY=", Role = AdminRole.SuperAdmin }
                 );
                 context.SaveChanges();
             }
