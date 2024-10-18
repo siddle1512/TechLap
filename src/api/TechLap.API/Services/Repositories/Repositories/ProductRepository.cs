@@ -42,12 +42,17 @@ public class ProductRepository : RepositoryBase, IProductRepository
         return await _dbContext.Products.FindAsync(id);
     }
 
+    public Task<bool> IsCategoryValidAsync(int categoryId)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<bool> UpdateAsync(Product entity)
     {
         _dbContext.Entry(entity).State = EntityState.Modified;
         return await _dbContext.SaveChangesAsync() > 0;
     }
-    
+
     public async Task<IReadOnlyList<Product>> SearchProductsAsync(SearchProductsRequest request)
     {
         var query = _dbContext.Products.AsQueryable();
