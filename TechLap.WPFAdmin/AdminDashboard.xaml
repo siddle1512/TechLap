@@ -21,7 +21,8 @@
             <TextBlock Text="Admin Panel" FontSize="20" Foreground="White" Margin="20,30,0,20"/>
             <Button Content="Dashboard"/>
             <Button Content="Users"/>
-            <Button Content="Settings"/>
+            <Button Content="Chat" Click="Chat_Click"/>
+            <Button Content="Settings" />
             <Button Content="Logout" Background="#FF5722"/>
         </StackPanel>
 
@@ -29,37 +30,46 @@
         <ScrollViewer Grid.Column="1" Padding="20">
             <StackPanel>
 
-                <!-- Overview Cards -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
-                    <Border Background="#4CAF50" CornerRadius="10" Width="200" Height="100" Margin="10" Padding="10">
-                        <StackPanel>
-                            <TextBlock Text="Total Users" FontSize="16" Foreground="White" HorizontalAlignment="Center"/>
-                            <TextBlock Text="1,200" FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Border Background="#2196F3" CornerRadius="10" Width="200" Height="100" Margin="10" Padding="10">
-                        <StackPanel>
-                            <TextBlock Text="Active Sessions" FontSize="16" Foreground="White" HorizontalAlignment="Center"/>
-                            <TextBlock Text="300" FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Border Background="#FFC107" CornerRadius="10" Width="200" Height="100" Margin="10" Padding="10">
-                        <StackPanel>
-                            <TextBlock Text="Pending Tasks" FontSize="16" Foreground="White" HorizontalAlignment="Center"/>
-                            <TextBlock Text="25" FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
+                <!-- Dashboard Overview Cards (Default Content) -->
+                <StackPanel x:Name="DashboardContent" Visibility="Visible">
+                    <TextBlock Text="Dashboard" FontSize="20" FontWeight="Bold" Margin="0,20,0,10"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
+                        <Border Background="#4CAF50" CornerRadius="10" Width="200" Height="100" Margin="10" Padding="10">
+                            <StackPanel>
+                                <TextBlock Text="Total Users" FontSize="16" Foreground="White" HorizontalAlignment="Center"/>
+                                <TextBlock Text="1,200" FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Background="#2196F3" CornerRadius="10" Width="200" Height="100" Margin="10" Padding="10">
+                            <StackPanel>
+                                <TextBlock Text="Active Sessions" FontSize="16" Foreground="White" HorizontalAlignment="Center"/>
+                                <TextBlock Text="300" FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Background="#FFC107" CornerRadius="10" Width="200" Height="100" Margin="10" Padding="10">
+                            <StackPanel>
+                                <TextBlock Text="Pending Tasks" FontSize="16" Foreground="White" HorizontalAlignment="Center"/>
+                                <TextBlock Text="25" FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
                 </StackPanel>
 
-                <!-- Dashboard Main Content -->
-                <TextBlock Text="Recent Activity" FontSize="20" FontWeight="Bold" Margin="0,20,0,10"/>
-                <ListView>
-                    <ListViewItem Content="User John logged in." />
-                    <ListViewItem Content="Admin updated settings." />
-                    <ListViewItem Content="New user registration: Alice." />
-                </ListView>
+                <!-- Chat Content (Initially Hidden) -->
+                <StackPanel x:Name="ChatContent" Visibility="Collapsed">
+                    <TextBlock Name="ChatHeader" Text="Chat with Users" FontSize="20" FontWeight="Bold" Margin="10"/>
+                    <ScrollViewer Name="ChatScrollViewer" Height="400" Margin="10" Background="#EFEFEF" Padding="10">
+                        <StackPanel Name="MessageContainer">
+                            <!-- Messages will be added here -->
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <StackPanel Orientation="Horizontal" Margin="10">
+                        <TextBox Name="MessageInput" Width="500" Height="30" Margin="5"/>
+                        <Button Content="Send" Width="100" Click="SendMessage_Click"/>
+                    </StackPanel>
+                </StackPanel>
+
             </StackPanel>
         </ScrollViewer>
     </Grid>
