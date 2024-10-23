@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\api\TechLap.API\TechLap.API.csproj" />
     <ProjectReference Include="..\..\wpf\TechLap.WPF\TechLap.WPF.csproj" />
   </ItemGroup>
 

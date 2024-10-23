@@ -20,6 +20,7 @@ namespace TechLap.API.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Discount> Discounts { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<Customer> Customers { get; set; }
 
         public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
@@ -68,6 +69,16 @@ namespace TechLap.API.Data
                 .HasMany(o => o.Orders)
                 .WithOne(o => o.Discount)
                 .HasForeignKey(o => o.DiscountId);
+
+            modelBuilder.Entity<ChatMessage>()
+                .HasOne<User>()
+                .WithMany()
+                .HasForeignKey(cm => cm.SenderId);
+
+            modelBuilder.Entity<ChatMessage>()
+                .HasOne<User>()
+                .WithMany()
+                .HasForeignKey(cm => cm.ReceiverId);
         }
     }
 }

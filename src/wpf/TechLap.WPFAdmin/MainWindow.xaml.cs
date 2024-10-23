@@ -16,7 +16,10 @@ namespace TechLap.WPFAdmin
     /// </summary>
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        private HubConnection _connection;
+        //private readonly TechLapContext _context;
+
+        public AdminDashboard()
         {
             InitializeComponent();
             InitializeSignalR();
