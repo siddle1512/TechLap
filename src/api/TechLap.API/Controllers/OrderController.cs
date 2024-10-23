@@ -14,10 +14,12 @@ namespace TechLap.API.Controllers
     public class OrderController : BaseController<OrderController>
     {
         private readonly IOrderRepository _orderRepository;
+        private readonly ICustomerRepository _customerRepository;
 
-        public OrderController(IOrderRepository orderRepository)
+        public OrderController(IOrderRepository orderRepository, ICustomerRepository customerRepository)
         {
             _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
+            _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository));
         }
 
         [Authorize(Roles = "Admin, User")]
@@ -54,12 +56,24 @@ namespace TechLap.API.Controllers
         {
             var userId = GetUserIdFromToken();
 
+            // Map the order from the request
             var order = LazyMapper.Mapper.Map<Order>(request);
             order.UserId = userId.GetValueOrDefault();
 
+            // Check if the customer exists
+            if (request.CustomerId.HasValue)
+            {
+                var customer = await _customerRepository.GetByIdAsync(request.CustomerId.Value);
+                if (customer == null)
+                {
+                    throw new NotFoundException("Customer not found.");
+                }
+                order.CustomerId = customer.Id;
+            }
+
             var newOrder = await _orderRepository.AddAsync(order);
 
-            return CreateResponse<string>(true, "Request processed successfully.", HttpStatusCode.OK, "Add orderId " + order.Id + " successfully");
+            return CreateResponse<string>(true, "Order created successfully.", HttpStatusCode.OK, "Order ID " + newOrder.Id + " created");
         }
 
         [Authorize(Roles = "Admin")]
@@ -67,6 +81,17 @@ namespace TechLap.API.Controllers
         public async Task<IActionResult> CreateOrderAdmin([FromBody] OrderAdminRequest request)
         {
             var order = LazyMapper.Mapper.Map<Order>(request);
+
+            // Check if the customer exists
+            if (request.CustomerId.HasValue)
+            {
+                var customer = await _customerRepository.GetByIdAsync(request.CustomerId.Value);
+                if (customer == null)
+                {
+                    throw new NotFoundException("Customer not found.");
+                }
+                order.CustomerId = customer.Id;
+            }
 
             var newOrder = await _orderRepository.AddAsync(order);
 
@@ -87,9 +112,21 @@ namespace TechLap.API.Controllers
             }
 
             var updatedOrder = LazyMapper.Mapper.Map(request, order);
+
+            // Check if the customer exists
+            if (request.CustomerId.HasValue)
+            {
+                var customer = await _customerRepository.GetByIdAsync(request.CustomerId.Value);
+                if (customer == null)
+                {
+                    throw new NotFoundException("Customer not found.");
+                }
+                updatedOrder.CustomerId = customer.Id;
+            }
+
             await _orderRepository.UpdateAsync(updatedOrder);
 
-            return CreateResponse<string>(true, "Request processed successfully.", HttpStatusCode.OK, "Update orderId " + order.Id + " successfully");
+            return CreateResponse<string>(true, "Order updated successfully.", HttpStatusCode.OK, "Updated orderId " + order.Id);
         }
     }
 }

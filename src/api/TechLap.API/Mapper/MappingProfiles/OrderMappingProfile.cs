@@ -9,7 +9,7 @@ namespace TechLap.API.Mapper.MappingProfiles
     {
         public OrderMappingProfile()
         {
-            //Mapping Response
+            // Mapping Response
             CreateMap<Order, OrderResponse>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
@@ -70,9 +70,15 @@ namespace TechLap.API.Mapper.MappingProfiles
                         Image = product.Image,
                     }).ToList()
                 ))
+                .ForMember(dest => dest.Customer, opt => opt.MapFrom(src => new CustomerResponse
+                {
+                    Name = src.Customer.Name,
+                    Email = src.Customer.Email,
+                    PhoneNumber = src.Customer.PhoneNumber
+                }))
                 .ReverseMap();
 
-            //Mapping Request
+            // Mapping Request
             CreateMap<OrderDetailRequest, OrderDetail>().ReverseMap();
             CreateMap<OrderRequest, Order>()
                 .ForMember(dest => dest.OrderDetails, opt => opt.MapFrom(src => src.OrderDetails))

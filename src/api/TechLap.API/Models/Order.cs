@@ -21,5 +21,8 @@ namespace TechLap.API.Models
         public Discount Discount { get; set; } = null!;
         public User User { get; set; } = null!;
         public IEnumerable<OrderDetail> OrderDetails = new List<OrderDetail>();
+        [Required]
+        public int CustomerId { get; set; }
+        public Customer Customer { get; set; } = null!;
     }
 }

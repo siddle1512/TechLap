@@ -10,7 +10,8 @@ namespace TechLap.API.DTOs.Requests
         int? DiscountId,
         DateTime CreatedDate,
         DateTime LastModifiedDate,
-        List<OrderDetailRequest> OrderDetails
+        List<OrderDetailRequest> OrderDetails,
+        int? CustomerId
     );
 
     public record OrderAdminRequest(
@@ -22,7 +23,8 @@ namespace TechLap.API.DTOs.Requests
         int? DiscountId,
         DateTime CreatedDate,
         DateTime LastModifiedDate,
-        List<OrderDetailRequest> OrderDetails
+        List<OrderDetailRequest> OrderDetails,
+        int? CustomerId
     );
 
     public record OrderDetailRequest(

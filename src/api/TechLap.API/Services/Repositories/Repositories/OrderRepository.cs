@@ -24,6 +24,15 @@ namespace TechLap.API.Services.Repositories.Repositories
                 }
             }
 
+            if (entity.CustomerId != 0)
+            {
+                var customer = await _dbContext.Customers.FindAsync(entity.CustomerId);
+                if (customer == null)
+                {
+                    throw new NotFoundException("Customer not found");
+                }
+            }
+
             if (entity.DiscountId == 0)
             {
                 entity.DiscountId = null;
@@ -55,6 +64,7 @@ namespace TechLap.API.Services.Repositories.Repositories
         {
             var orders = await _dbContext.Orders
                 .Include(o => o.User)
+                .Include(o => o.Customer)
                 .Include(o => o.Discount)
                 .Include(o => o.OrderDetails)
                     .ThenInclude(od => od.Product)
@@ -72,6 +82,7 @@ namespace TechLap.API.Services.Repositories.Repositories
         {
             var order = await _dbContext.Orders
                 .Include(o => o.User)
+                .Include(o => o.Customer)
                 .Include(o => o.Discount)
                 .Include(o => o.OrderDetails)
                     .ThenInclude(od => od.Product)
@@ -98,6 +109,7 @@ namespace TechLap.API.Services.Repositories.Repositories
             existingOrder.Payment = entity.Payment;
             existingOrder.Status = entity.Status;
             existingOrder.DiscountId = entity.DiscountId;
+            existingOrder.CustomerId = entity.CustomerId;
 
             if (entity.UserId != 0)
             {
@@ -105,6 +117,15 @@ namespace TechLap.API.Services.Repositories.Repositories
                 if (user == null)
                 {
                     throw new NotFoundException("User not found");
+                }
+            }
+
+            if (entity.CustomerId != 0)
+            {
+                var customer = await _dbContext.Customers.FindAsync(entity.CustomerId);
+                if (customer == null)
+                {
+                    throw new NotFoundException("Customer not found");
                 }
             }
 
@@ -161,7 +182,6 @@ namespace TechLap.API.Services.Repositories.Repositories
                     orderDetail.Price = orderDetail.Quantity * orderDetail.Product.Price;
                     entity.TotalPrice += orderDetail.Price;
                 }
-                return;
             }
         }
     }

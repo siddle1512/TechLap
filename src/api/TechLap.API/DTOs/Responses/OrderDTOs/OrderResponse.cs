@@ -15,6 +15,7 @@ namespace TechLap.API.DTOs.Responses.OrderDTOs
         public IEnumerable<UserResponse> Users { get; set; } = new List<UserResponse>();
         public IEnumerable<DiscountResponse> Discounts { get; set; } = new List<DiscountResponse>();
         public IEnumerable<ProductResponse> Products { get; set; } = new List<ProductResponse>();
+        public CustomerResponse Customer { get; set; } = new CustomerResponse();
     }
 
     public class OrderDetailResponse
@@ -61,5 +62,12 @@ namespace TechLap.API.DTOs.Responses.OrderDTOs
         public decimal Price { get; set; }
         public int Stock { get; set; }
         public string Image { get; set; } = string.Empty;
+    }
+
+    public record CustomerResponse
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
     }
 }
