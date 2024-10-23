@@ -5,6 +5,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
 builder.Services.AddSignalR();
+builder.Services.AddHttpClient();
+builder.Services.AddSession();
 
 builder.Services.AddCors(options =>
 {
@@ -31,6 +33,7 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();
+app.UseSession();
 
 app.MapRazorPages();
 app.MapHub<ChatHub>("/chatHub");

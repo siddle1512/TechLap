@@ -1,0 +1,23 @@
+﻿@page
+@model TechLap.Razor.Pages.Login.IndexModel
+@{
+    <h2>Login</h2>
+
+    <form method="post">
+        <div>
+            <label asp-for="Username"></label>
+            <input asp-for="Username" />
+        </div>
+        <div>
+            <label asp-for="Password"></label>
+            <input asp-for="Password" type="password" />
+        </div>
+        <button type="submit">Login</button>
+    </form>
+
+    @if (Model.Message != null)
+    {
+        <div>@Model.Message</div>
+    }
+}
+

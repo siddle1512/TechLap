@@ -30,7 +30,7 @@ namespace TechLap.WPF
                 // Create HttpClient 
                 var client = new HttpClient();
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
-                var content = JsonConvert.SerializeObject(new { Username = username, Password = password });
+                var content = JsonConvert.SerializeObject(new { Email = username, Password = password });
                 StringContent data = new StringContent(content, Encoding.UTF8, "application/json");
 
                 // Send request to API

@@ -55,5 +55,13 @@ namespace TechLap.API.Controllers
             var tokenString = GenerateJwtToken(userLogin.Id.ToString(), "User");
             return CreateResponse<string>(true, "Request processed successfully.", HttpStatusCode.OK, tokenString);
         }
+
+        [HttpGet]
+        [Authorize]
+        [Route("/api/user/validateToken")]
+        public IActionResult ValidateToken()
+        {
+            return CreateResponse<string>(true, "Request processed successfully.", HttpStatusCode.OK);
+        }
     }
 }
