@@ -2,8 +2,8 @@
 
 namespace TechLap.API.Services.Repositories.IRepositories
 {
-    public interface ICategoryRepository
+    public interface ICategoryRepository : IAsyncRepository<Category>
     {
-        Task<Category?> GetByIdAsync(int id);
+        public Task<Category?> GetByIdAsync(int id);
     }
 }
