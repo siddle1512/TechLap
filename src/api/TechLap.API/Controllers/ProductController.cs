@@ -31,15 +31,15 @@ namespace TechLap.API.Controllers
             return CreateResponse<IEnumerable<ProductResponse>>(true, "Request processed successfully.", HttpStatusCode.OK, response);
         }
 
-        //[HttpGet]
-        //[Authorize(Roles = "User, Admin")]
-        //[Route("/api/products/")]
-        //public async Task<IActionResult> GetProducts([FromQuery] SearchProductRequestByModel request)
-        //{
-        //    var products = await _productRepository.GetAllAsync(p => p.Model.ToLower().Contains(request.Model.ToLower()));
-        //    var response = LazyMapper.Mapper.Map<IEnumerable<ProductResponse>>(products);
-        //    return CreateResponse<IEnumerable<ProductResponse>>(true, "Request processed successfully.", HttpStatusCode.OK, response);
-        //}
+        [HttpGet]
+        [Authorize(Roles = "User, Admin")]
+        [Route("/api/products/search")]
+        public async Task<IActionResult> GetProducts([FromQuery] SearchProductRequestByModel request)
+        {
+            var products = await _productRepository.GetAllAsync(p => p.Model.ToLower().Contains(request.Model.ToLower()));
+            var response = LazyMapper.Mapper.Map<IEnumerable<ProductResponse>>(products);
+            return CreateResponse<IEnumerable<ProductResponse>>(true, "Request processed successfully.", HttpStatusCode.OK, response);
+        }
 
         [HttpPost]
         [Authorize(Roles = "User, Admin")]
