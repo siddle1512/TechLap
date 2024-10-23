@@ -8,6 +8,7 @@ namespace TechLap.WPFAdmin
     public partial class AdminDashboard : Window
     {
         private HubConnection _connection;
+        //private readonly TechLapContext _context;
 
         public AdminDashboard()
         {
