@@ -15,7 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TechLap.WPF", "src\wpf\Tech
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "razor", "razor", "{5B858883-0E98-4F4C-B8CD-F9A1C0E63CB3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechLap.Razor", "src\razor\TechLap.Razor\TechLap.Razor.csproj", "{23E2DC50-A634-4F3E-9A1C-83CDD2691496}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TechLap.Razor", "src\razor\TechLap.Razor\TechLap.Razor.csproj", "{23E2DC50-A634-4F3E-9A1C-83CDD2691496}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechLap.WPFAdmin", "src\wpf\TechLap.WPFAdmin\TechLap.WPFAdmin.csproj", "{4ACF8472-2284-4764-8D21-5C07EBFF6A59}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,6 +37,10 @@ Global
 		{23E2DC50-A634-4F3E-9A1C-83CDD2691496}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{23E2DC50-A634-4F3E-9A1C-83CDD2691496}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{23E2DC50-A634-4F3E-9A1C-83CDD2691496}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4ACF8472-2284-4764-8D21-5C07EBFF6A59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4ACF8472-2284-4764-8D21-5C07EBFF6A59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4ACF8472-2284-4764-8D21-5C07EBFF6A59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4ACF8472-2284-4764-8D21-5C07EBFF6A59}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -46,6 +52,7 @@ Global
 		{4C77083D-C525-4772-9F7C-84A26FCAFF3B} = {51B7A64E-5B7C-48B6-94A6-2B1172FBF8A4}
 		{5B858883-0E98-4F4C-B8CD-F9A1C0E63CB3} = {32404B3A-CAAE-48AB-B44B-551FEA9B9840}
 		{23E2DC50-A634-4F3E-9A1C-83CDD2691496} = {5B858883-0E98-4F4C-B8CD-F9A1C0E63CB3}
+		{4ACF8472-2284-4764-8D21-5C07EBFF6A59} = {51B7A64E-5B7C-48B6-94A6-2B1172FBF8A4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E097D991-DCEA-4B40-B466-65FF3C4F8A8A}
