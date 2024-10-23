@@ -15,6 +15,7 @@ namespace TechLap.API.Mapper
                 cfg.AddProfile<DiscountMappingProfile>();
                 cfg.AddProfile<UserMappingProfile>();
                 cfg.AddProfile<OrderMappingProfile>();
+                cfg.AddProfile<CustomerMappingProfile>();
             });
 
             return config.CreateMapper();
