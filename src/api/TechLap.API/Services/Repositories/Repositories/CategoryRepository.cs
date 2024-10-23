@@ -1,5 +1,8 @@
-﻿using System.Linq.Expressions;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Linq.Expressions;
 using TechLap.API.Data;
+using TechLap.API.Exceptions;
 using TechLap.API.Models;
 using TechLap.API.Services.Repositories.IRepositories;
 
@@ -21,14 +24,24 @@ namespace TechLap.API.Services.Repositories.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<IReadOnlyList<Category>> GetAllAsync(Expression<Func<Category, bool>> predicate)
+        public async Task<IReadOnlyList<Category>> GetAllAsync(Expression<Func<Category, bool>> predicate)
         {
-            throw new NotImplementedException();
+            var categories = await _dbContext.Categories.Where(predicate).ToListAsync();
+            if (!categories.Any())
+            {
+                throw new NotFoundException("Not found any categories");
+            }
+            return categories;
         }
 
         public async Task<Category?> GetByIdAsync(int id)
         {
-            return await _dbContext.Categories.FindAsync(id);
+            var category = await _dbContext.Categories.Where(o => o.Id == id).FirstOrDefaultAsync();
+            if (category == null)
+            {
+                throw new NotFoundException("Not found any categories with " + id);
+            }
+            return category;
         }
 
         public Task<bool> UpdateAsync(Category entity)
