@@ -22,7 +22,7 @@ namespace TechLap.WPF
             // Initialize HttpClient and set base address
             _httpClient = new HttpClient
             {
-                BaseAddress = new Uri(ConfigurationManager.AppSettings["ApiEndpoint"])
+                BaseAddress = new Uri(ConfigurationManager.AppSettings["ApiEndpoint"] ?? throw new ArgumentNullException(nameof(ConfigurationManager)))
             };
 
             // Set the authorization header with the token from GlobalState
@@ -153,15 +153,15 @@ namespace TechLap.WPF
     {
         public bool IsSuccess { get; set; }
         public List<CustomerResponse> Data { get; set; }
-        public string Message { get; set; }
-        public string Details { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public string Details { get; set; } = string.Empty;
     }
 
     public class CustomerResponse
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string Email { get; set; }
-        public string PhoneNumber { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
     }
 }

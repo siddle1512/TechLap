@@ -17,7 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "razor", "razor", "{5B858883
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TechLap.Razor", "src\razor\TechLap.Razor\TechLap.Razor.csproj", "{23E2DC50-A634-4F3E-9A1C-83CDD2691496}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechLap.WPFAdmin", "src\wpf\TechLap.WPFAdmin\TechLap.WPFAdmin.csproj", "{4ACF8472-2284-4764-8D21-5C07EBFF6A59}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TechLap.WPFAdmin", "src\wpf\TechLap.WPFAdmin\TechLap.WPFAdmin.csproj", "{4ACF8472-2284-4764-8D21-5C07EBFF6A59}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
