@@ -6,6 +6,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddHttpClient();
 builder.Services.AddSession();
 builder.Services.AddSignalR();
+builder.Services.AddHttpClient();
+builder.Services.AddSession();
 
 builder.Services.AddCors(options =>
 {

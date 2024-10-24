@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 using TechLap.WPFAdmin.Components;
-
+using TechLap.WPFAdmin.ChatNew;
 namespace TechLap.WPFAdmin
 {
     public partial class AdminDashboard : Window
@@ -17,7 +17,7 @@ namespace TechLap.WPFAdmin
 
         private void GroupChat_Click(object sender, RoutedEventArgs e)
         {
-            //MainContentArea.Content = new GroupChatControl();  // Load Group Chat UserControl
+            MainContentArea.Content = new ChatNewControl();
         }
 
         private void Logout_Click(object sender, RoutedEventArgs e)

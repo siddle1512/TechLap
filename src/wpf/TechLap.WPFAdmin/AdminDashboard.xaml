@@ -22,5 +22,6 @@
         </StackPanel>
 
         <ContentControl x:Name="MainContentArea" />
+        
     </DockPanel>
 </Window>
