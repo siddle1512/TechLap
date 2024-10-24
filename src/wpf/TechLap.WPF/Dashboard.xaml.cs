@@ -47,7 +47,7 @@ namespace TechLap.WPF
 
         private void OrderManagement_Click(object sender, RoutedEventArgs e)
         {
-            //MainContentArea.Content = new OrderManager();  // Load Order management UserControl
+            MainContentArea.Content = new OrderManager();
         }
 
         private void SearchLaptop_Click(object sender, RoutedEventArgs e)

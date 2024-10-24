@@ -8,8 +8,6 @@ namespace TechLap.API.DTOs.Requests
         PaymentMethod Payment,
         OrderStatus Status,
         int? DiscountId,
-        DateTime CreatedDate,
-        DateTime LastModifiedDate,
         List<OrderDetailRequest> OrderDetails,
         int? CustomerId
     );
@@ -21,8 +19,6 @@ namespace TechLap.API.DTOs.Requests
         PaymentMethod Payment,
         OrderStatus Status,
         int? DiscountId,
-        DateTime CreatedDate,
-        DateTime LastModifiedDate,
         List<OrderDetailRequest> OrderDetails,
         int? CustomerId
     );

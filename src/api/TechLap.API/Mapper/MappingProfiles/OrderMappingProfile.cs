@@ -26,32 +26,26 @@ namespace TechLap.API.Mapper.MappingProfiles
                         Quantity = od.Quantity,
                         Price = od.Price,
                     })))
-                .ForMember(dest => dest.Users, opt => opt.MapFrom(src => new List<UserResponse>
+                .ForMember(dest => dest.Users, opt => opt.MapFrom(src => new UserResponse
                 {
-                    new UserResponse
-                    {
-                        FullName = src.User.FullName,
-                        BirthYear = src.User.BirthYear,
-                        Gender = src.User.Gender,
-                        Email = src.User.Email,
-                        PhoneNumber = src.User.PhoneNumber,
-                        AvatarPath = src.User.AvatarPath,
-                        Address = src.User.Address,
-                        Status = src.User.Status
-                    }
+                    FullName = src.User.FullName,
+                    BirthYear = src.User.BirthYear,
+                    Gender = src.User.Gender,
+                    Email = src.User.Email,
+                    PhoneNumber = src.User.PhoneNumber,
+                    AvatarPath = src.User.AvatarPath,
+                    Address = src.User.Address,
+                    Status = src.User.Status
                 }))
-                .ForMember(dest => dest.Discounts, opt => opt.MapFrom(src => new List<DiscountResponse>
+                .ForMember(dest => dest.Discounts, opt => opt.MapFrom(src => new DiscountResponse
                 {
-                    new DiscountResponse
-                    {
-                        DiscountCode = src.Discount.DiscountCode,
-                        DiscountPercentage = src.Discount.DiscountPercentage,
-                        StartDate = src.Discount.StartDate,
-                        EndDate = src.Discount.EndDate,
-                        UsageLimit = src.Discount.UsageLimit,
-                        TimesUsed = src.Discount.TimesUsed,
-                        Status = src.Discount.Status
-                    }
+                    DiscountCode = src.Discount.DiscountCode,
+                    DiscountPercentage = src.Discount.DiscountPercentage,
+                    StartDate = src.Discount.StartDate,
+                    EndDate = src.Discount.EndDate,
+                    UsageLimit = src.Discount.UsageLimit,
+                    TimesUsed = src.Discount.TimesUsed,
+                    Status = src.Discount.Status
                 }))
                 .ForMember(dest => dest.Products, opt => opt.MapFrom(src =>
                     src.OrderDetails.Select(od => od.Product).Where(product => product != null)
