@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using TechLap.API.Configurations;
 using TechLap.API.Data;
+using TechLap.API.Hubs;
 using TechLap.API.Mapper.MappingProfiles;
 using TechLap.API.Services.Filters;
 using TechLap.API.Services.Repositories.IRepositories;
@@ -91,12 +92,15 @@ builder.Services.AddDbContext<TechLapContext>(options =>
 
 builder.Services.AddAutoMapper(typeof(ProductMappingProfile));
 
+builder.Services.AddSignalR();
+
 //lifetimeDependencyInjection
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
@@ -130,5 +134,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<ChatHub>("/chatHub");
 
 app.Run();

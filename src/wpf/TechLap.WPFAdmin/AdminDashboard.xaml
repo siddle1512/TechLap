@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TechLap.WPFAdmin"
         mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
         Title="Dashboard" Height="900" Width="1600">
 
     <!-- Link to theme -->
@@ -22,5 +23,6 @@
         </StackPanel>
 
         <ContentControl x:Name="MainContentArea" />
+        
     </DockPanel>
 </Window>

@@ -12,10 +12,11 @@ namespace TechLap.API.DTOs.Responses.OrderDTOs
         public string OrderStatus { get; set; } = string.Empty;
         public int? DiscountId { get; set; }
         public IEnumerable<OrderDetailResponse> OrderDetails { get; set; } = new List<OrderDetailResponse>();
-        public IEnumerable<UserResponse> Users { get; set; } = new List<UserResponse>();
-        public IEnumerable<DiscountResponse> Discounts { get; set; } = new List<DiscountResponse>();
+        public UserResponse Users { get; set; } = new UserResponse();
+        public DiscountResponse Discounts { get; set; } = new DiscountResponse();
         public IEnumerable<ProductResponse> Products { get; set; } = new List<ProductResponse>();
         public CustomerResponse Customer { get; set; } = new CustomerResponse();
+        public int CustomerId { get; set; }
     }
 
     public class OrderDetailResponse

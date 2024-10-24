@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Net.Http;
 using System.Text;
 using System.Windows;
+using TechLap.WPFAdmin.Components;
 
 namespace TechLap.WPFAdmin
 {
@@ -41,21 +42,21 @@ namespace TechLap.WPFAdmin
                 // Parse JSON response
                 var jsonResponse = JObject.Parse(responseBody);
 
-                if (jsonResponse["isSuccess"] != null)
+                if (jsonResponse["isSuccess"] != null && jsonResponse["isSuccess"].Value<bool>())
                 {
-                    if (jsonResponse["isSuccess"].Value<bool>())
-                    {
-                        //MessageBox.Show("Login successfully");
-                        GlobalState.Token = jsonResponse["data"].Value<string>();
-                        AdminDashboard adminDashboard = new AdminDashboard();
-                        adminDashboard.Show();
-                        Close();
-                    }
+                    GlobalState.Token = jsonResponse["data"].Value<string>();
+                    AdminDashboard adminDashboard = new AdminDashboard();
+                    adminDashboard.Show();
+                    Close();
+                }
+                else
+                {
+                    errorMessageControl.ShowError("Login failed! Incorrect username or password.");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show(ex.Message);
+                errorMessageControl.ShowError("Login failed! Please try again.");
             }
             finally
             {
