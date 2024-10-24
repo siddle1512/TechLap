@@ -23,7 +23,6 @@ namespace TechLap.WPFAdmin.Components
             client.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json")
                 );
-            // Set the authorization header with the token from GlobalState
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", GlobalState.Token);
             InitializeComponent();
         }
@@ -45,9 +44,15 @@ namespace TechLap.WPFAdmin.Components
             await client.PostAsJsonAsync("users", request);
         }
 
+        private async void UpdateUser(CreateUserRequest request)
+        {
+            await client.PutAsJsonAsync("users/" + request.Id, request);
+        }
+
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
             var request = new CreateUserRequest(
+                Id: Convert.ToInt32(txtUserId.Text),
                 FullName: txtFullName.Text,
                 BirthYear: dpBirthYear.SelectedDate ?? DateTime.Now,
                 Gender: cmbGender.SelectedItem is ComboBoxItem selectedGender
@@ -67,7 +72,16 @@ namespace TechLap.WPFAdmin.Components
                     : UserStatus.Active
                 );
 
-            this.CreateUser(request);
+            if (request.Id == 0)
+            {
+                this.CreateUser(request);
+                lblMessage.Content = "User Added"; 
+            }
+            else
+            {
+                this.UpdateUser(request);
+                lblMessage.Content = "User Updated";
+            }
 
             txtFullName.Text = string.Empty;
             dpBirthYear.SelectedDate = null;
@@ -77,6 +91,19 @@ namespace TechLap.WPFAdmin.Components
             txtHashedPassword.Text = string.Empty;
             txtAddress.Text = string.Empty;
             cmbStatus.SelectedIndex = -1;
+        }
+
+        void btnEditUser(object sender, RoutedEventArgs e)
+        {
+            User? user = ((FrameworkElement)sender).DataContext as User;
+            txtUserId.Text = user?.Id.ToString();
+            txtFullName.Text = user?.FullName;
+            dpBirthYear.SelectedDate = user?.BirthYear;
+            cmbGender.SelectedItem = user?.Gender;
+            txtEmail.Text = user?.Email;
+            txtPhoneNumber.Text = user?.PhoneNumber;
+            txtAddress.Text = user?.Address;
+            cmbStatus.SelectedItem = user?.Status;
         }
     }
 }
