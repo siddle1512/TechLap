@@ -6,9 +6,13 @@
         xmlns:local="clr-namespace:TechLap.WPF"
         mc:Ignorable="d"
         Title="Login" Height="450" Width="800" Background="#F0F0F0">
-    <Grid>
-        <!-- Loading Spinner -->
 
+    <!-- Link to theme -->
+    <Window.Resources>
+        <ResourceDictionary Source="Themes/CustomTheme.xaml" />
+    </Window.Resources>
+
+    <Grid>
         <!-- Center the content -->
         <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
 
@@ -18,14 +22,18 @@
                 <!-- Username Label and Textbox -->
                 <TextBlock Text="Username" FontSize="16" Margin="0,0,0,5" HorizontalAlignment="Center"/>
                 <TextBox x:Name="txtUsername" Width="250" Height="30" Padding="5" 
-                         Background="White" BorderBrush="Gray" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                         Background="White" BorderBrush="Gray" BorderThickness="1"
+                         Style="{StaticResource {x:Type TextBox}}"
+                         HorizontalAlignment="Center" VerticalAlignment="Top"/>
 
                 <!-- Password Label and PasswordBox -->
                 <TextBlock Text="Password" FontSize="16" Margin="0,10,0,5" HorizontalAlignment="Center"/>
-                <PasswordBox x:Name="txtPassword" Width="250" Height="30" Padding="5" 
-                             Background="White" BorderBrush="Gray" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                <PasswordBox x:Name="txtPassword" Width="250" Height="30" Padding="5"
+                             Background="White" BorderBrush="Gray" BorderThickness="1"
+                             Style="{StaticResource {x:Type PasswordBox}}"
+                             HorizontalAlignment="Center" VerticalAlignment="Top"/>
 
-                <!-- Login Button -->
+                <!-- Login Button with consistent style -->
                 <Border CornerRadius="5" Background="Transparent" Margin="0,20,0,0">
                     <Border.Effect>
                         <DropShadowEffect ShadowDepth="5" BlurRadius="10" Opacity="0.4"/>
@@ -33,10 +41,11 @@
                     <Button x:Name="btnLogin" Content="Login" Width="150" Height="35" HorizontalAlignment="Center"
                             VerticalAlignment="Top"
                             Background="#4CAF50" Foreground="White" FontSize="16"
-                            Cursor="Hand" Click="btnLogin_Click" />
+                            Cursor="Hand" Click="btnLogin_Click" Style="{StaticResource {x:Type Button}}"/>
                 </Border>
-                <ProgressBar x:Name="progressBar" Width="150" Height="20" IsIndeterminate="True" Visibility="Collapsed" />
 
+                <!-- Loading Spinner (ProgressBar) -->
+                <ProgressBar x:Name="progressBar" Width="150" Height="20" IsIndeterminate="True" Visibility="Collapsed" />
             </StackPanel>
         </Grid>
     </Grid>

@@ -23,6 +23,8 @@ namespace TechLap.WPFAdmin.Components
             client.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json")
                 );
+            // Set the authorization header with the token from GlobalState
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", GlobalState.Token);
             InitializeComponent();
         }
 
@@ -33,7 +35,6 @@ namespace TechLap.WPFAdmin.Components
 
         private async void GetUsers()
         {
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "GlobalState.Token");
             var response = await client.GetStringAsync("users");
             var apiResponse = JsonConvert.DeserializeObject<ApiResponse<IEnumerable<User>>>(response);
             dgUser.ItemsSource = apiResponse?.Data;
@@ -41,7 +42,6 @@ namespace TechLap.WPFAdmin.Components
 
         private async void CreateUser(CreateUserRequest request)
         {
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "GlobalState.Token");
             await client.PostAsJsonAsync("users", request);
         }
 
