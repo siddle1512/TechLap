@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using TechLap.API.DTOs.Requests;
 using TechLap.API.DTOs.Responses.UserDTOs;
+using TechLap.API.Exceptions;
 using TechLap.API.Mapper;
 using TechLap.API.Models;
 using TechLap.API.Services.Repositories.IRepositories;
@@ -15,6 +16,19 @@ namespace TechLap.API.Controllers
         public UserController(IUserRepository userRepository)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        }
+
+        [Authorize(Roles = "Admin, User")]
+        [HttpPut("/api/users/{id:int}")]
+        public async Task<IActionResult> UpdateUser(int id, UpdateUserRequest request)
+        {
+            if(id != request.Id)
+            {
+                throw new BadRequestException("Id do not match");
+            }
+            var user = LazyMapper.Mapper.Map<User>(request);
+            await _userRepository.UpdateAsync(user);
+            return CreateResponse<string>(true, "User updated successfully.", HttpStatusCode.OK, "UserId " + id + " updated.");
         }
 
         [Authorize(Roles = "Admin")]

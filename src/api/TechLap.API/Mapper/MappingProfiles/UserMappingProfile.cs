@@ -11,6 +11,7 @@ namespace TechLap.API.Mapper.MappingProfiles
         {
             CreateMap<User, CreateUserRequest>().ReverseMap();
             CreateMap<User, UserResponse>().ReverseMap();
+            CreateMap<User, UpdateUserRequest>().ReverseMap();
         }
     }
 }
