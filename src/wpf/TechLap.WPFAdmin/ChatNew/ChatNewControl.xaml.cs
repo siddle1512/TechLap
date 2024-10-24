@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Configuration;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -14,7 +15,7 @@ namespace TechLap.WPFAdmin.ChatNew
     {
         private HubConnection _connection;
         private int _selectedUserId;
-        private const string ApiUrl = "https://localhost:7170/api/chat/history"; // Địa chỉ API để lấy lịch sử tin nhắn
+        private string ApiUrl = ConfigurationManager.AppSettings["ApiEndpoint"];
         public ChatNewControl()
         {
             InitializeComponent();
@@ -26,7 +27,7 @@ namespace TechLap.WPFAdmin.ChatNew
             var client = new HttpClient();
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {GlobalState.Token}");
 
-            HttpResponseMessage response = await client.GetAsync("https://localhost:7097/api/users");
+            HttpResponseMessage response = await client.GetAsync($"{ApiUrl}/api/users");
             if (response.IsSuccessStatusCode)
             {
                 var responseBody = await response.Content.ReadAsStringAsync();
@@ -51,7 +52,7 @@ namespace TechLap.WPFAdmin.ChatNew
         private async void InitializeSignalR()
         {
             _connection = new HubConnectionBuilder()
-                .WithUrl("https://localhost:7170/chatHub", options =>
+                .WithUrl($"{ApiUrl}/chatHub", options =>
                 {
                     options.AccessTokenProvider = () => Task.FromResult(GlobalState.Token);
                 })
@@ -85,7 +86,7 @@ namespace TechLap.WPFAdmin.ChatNew
             {
                 var client = new HttpClient();
                 client.DefaultRequestHeaders.Add("Authorization", $"Bearer {GlobalState.Token}");
-                HttpResponseMessage response = await client.GetAsync($"https://localhost:7170/api/chat/history?userId={_selectedUserId}&adminId=1");
+                HttpResponseMessage response = await client.GetAsync($"{ApiUrl}/api/chat/history?userId={_selectedUserId}&adminId=1");
 
                 if (response.IsSuccessStatusCode)
                 {

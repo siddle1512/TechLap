@@ -19,4 +19,10 @@
     <ProjectReference Include="..\..\api\TechLap.API\TechLap.API.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Components\ErrorMessageControl.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+
 </Project>

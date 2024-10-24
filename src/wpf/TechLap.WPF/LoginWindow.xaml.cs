@@ -52,10 +52,14 @@ namespace TechLap.WPF
                         Close();
                     }
                 }
+                else
+                {
+                    errorMessageControl.ShowError("Login failed! Incorrect username or password.");
+                }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show(ex.Message);
+                errorMessageControl.ShowError("Login failed! Please try again.");
             }
             finally
             {

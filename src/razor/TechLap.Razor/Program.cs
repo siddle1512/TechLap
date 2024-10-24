@@ -1,4 +1,3 @@
-using TechLap.Razor.Hubbs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +36,5 @@ app.UseAuthorization();
 app.UseSession();
 
 app.MapRazorPages();
-app.MapHub<ChatHub>("/chatHub");
 
 app.Run();
