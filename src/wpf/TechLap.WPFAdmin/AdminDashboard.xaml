@@ -5,62 +5,22 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TechLap.WPFAdmin"
         mc:Ignorable="d"
-        Title="Admin Dashboard" Height="600" Width="900" Background="#F0F0F0" WindowStartupLocation="CenterScreen">
+        Title="Dashboard" Height="600" Width="1000">
 
-    <!-- Define Grid for layout with two columns: sidebar (column 0) and content area (column 1) -->
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200"/>
-            <!-- Sidebar -->
-            <ColumnDefinition Width="*"/>
-            <!-- Content -->
-        </Grid.ColumnDefinitions>
+    <!-- Link to theme -->
+    <Window.Resources>
+        <ResourceDictionary Source="Themes/CustomTheme.xaml" />
+    </Window.Resources>
 
-        <!-- Sidebar -->
-        <StackPanel Grid.Column="0" Background="#333" Width="200" HorizontalAlignment="Left">
-            <TextBlock Text="Admin Panel" FontSize="20" Foreground="White" Margin="20,30,0,20"/>
-            <Button Content="Dashboard"/>
-            <Button Content="Users"/>
-            <Button Content="Settings"/>
-            <Button Content="Logout" Background="#FF5722"/>
+    <DockPanel>
+        <!-- Sidebar for feature buttons -->
+        <StackPanel DockPanel.Dock="Left" Width="200" Background="#FF2C3E50">
+            <TextBlock Text="Dashboard" Foreground="White" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,20"/>
+            <Button Content="User manager" Click="UserManager_Click"/>
+            <Button Content="Group Chat" Click="GroupChat_Click"/>
+            <Button Content="Logout" Background="Red" Click="Logout_Click"/>
         </StackPanel>
 
-        <!-- Main Content Area -->
-        <ScrollViewer Grid.Column="1" Padding="20">
-            <StackPanel>
-
-                <!-- Overview Cards -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
-                    <Border Background="#4CAF50" CornerRadius="10" Width="200" Height="100" Margin="10" Padding="10">
-                        <StackPanel>
-                            <TextBlock Text="Total Users" FontSize="16" Foreground="White" HorizontalAlignment="Center"/>
-                            <TextBlock Text="1,200" FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Border Background="#2196F3" CornerRadius="10" Width="200" Height="100" Margin="10" Padding="10">
-                        <StackPanel>
-                            <TextBlock Text="Active Sessions" FontSize="16" Foreground="White" HorizontalAlignment="Center"/>
-                            <TextBlock Text="300" FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Border Background="#FFC107" CornerRadius="10" Width="200" Height="100" Margin="10" Padding="10">
-                        <StackPanel>
-                            <TextBlock Text="Pending Tasks" FontSize="16" Foreground="White" HorizontalAlignment="Center"/>
-                            <TextBlock Text="25" FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-
-                <!-- Dashboard Main Content -->
-                <TextBlock Text="Recent Activity" FontSize="20" FontWeight="Bold" Margin="0,20,0,10"/>
-                <ListView>
-                    <ListViewItem Content="User John logged in." />
-                    <ListViewItem Content="Admin updated settings." />
-                    <ListViewItem Content="New user registration: Alice." />
-                </ListView>
-            </StackPanel>
-        </ScrollViewer>
-    </Grid>
+        <ContentControl x:Name="MainContentArea" />
+    </DockPanel>
 </Window>
