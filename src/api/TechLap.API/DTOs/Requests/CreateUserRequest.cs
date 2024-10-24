@@ -3,6 +3,7 @@
 namespace TechLap.API.DTOs.Requests
 {
     public record CreateUserRequest(
+        int Id,
         string FullName,
         DateTime BirthYear,
         Gender Gender,
