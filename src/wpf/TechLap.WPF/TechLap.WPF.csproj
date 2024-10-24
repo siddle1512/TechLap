@@ -20,6 +20,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Page Update="DiscountsWindow\DiscountWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <XamlRuntime>Wpf</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
     <Compile Update="Components\ErrorMessageControl.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

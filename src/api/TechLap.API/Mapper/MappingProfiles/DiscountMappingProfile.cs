@@ -9,11 +9,11 @@ namespace TechLap.API.Mapper.MappingProfiles
     {
         public DiscountMappingProfile()
         {
-            CreateMap<AddAdminDiscountRequest, Discount>();
-            CreateMap<UpdateAdminDiscountRequest, Discount>();
-            CreateMap<DeleteAdminDiscountRequest, Discount>();
-            CreateMap<GetAdminDiscountRespones, Discount>();
-            CreateMap<ApplyUserDiscountRequest, Discount>();
+            CreateMap<AddAdminDiscountRequest, Discount>().ReverseMap();
+            CreateMap<UpdateAdminDiscountRequest, Discount>().ReverseMap();
+            CreateMap<DeleteAdminDiscountRequest, Discount>().ReverseMap();
+            CreateMap<GetAdminDiscountRespones, Discount>().ReverseMap();
+            CreateMap<ApplyUserDiscountRequest, Discount>().ReverseMap();
         }
     }
 }

@@ -4,7 +4,6 @@
         string DiscountCode,
         decimal DiscountPercentage,
         DateTime EndDate,
-        int UsageLimit,
-        DateTime LastModifiedDate
+        int UsageLimit
     );
 }

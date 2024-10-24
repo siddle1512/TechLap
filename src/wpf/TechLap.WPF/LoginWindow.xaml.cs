@@ -47,8 +47,8 @@ namespace TechLap.WPF
                     {
                         //MessageBox.Show("Login successfully");
                         GlobalState.Token = jsonResponse["data"].Value<string>();
-                        Dashboard adminDashboard = new Dashboard();
-                        adminDashboard.Show();
+                        Dashboard discountWindow = new Dashboard();
+                        discountWindow.Show();
                         Close();
                     }
                 }

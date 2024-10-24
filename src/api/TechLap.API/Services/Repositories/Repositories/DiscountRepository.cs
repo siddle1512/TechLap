@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using TechLap.API.Data;
 using TechLap.API.DTOs.Requests.DiscountRequests;
 using TechLap.API.Exceptions;
@@ -35,23 +35,23 @@ namespace TechLap.API.Services.Repositories.Repositories.Discounts
             }
             discount.TimesUsed += 1;
             discount.LastModifiedDate = DateTime.Now;
-            _dbContext.Discount.Update(discount);
+            _dbContext.Discounts.Update(discount);
             await _dbContext.SaveChangesAsync();
             return discount;
         }
         public async Task<Discount?> GetByCodeAsync(string discountCode)
         {
-            return await _dbContext.Discount.FirstOrDefaultAsync(d => d.DiscountCode == discountCode);
+            return await _dbContext.Discounts.FirstOrDefaultAsync(d => d.DiscountCode == discountCode);
         }
         
         public async Task<bool> DeleteAsync(Discount entity)
         {
-            var existingDiscount = await _dbContext.Discount.FindAsync(entity.Id);
+            var existingDiscount = await _dbContext.Discounts.FindAsync(entity.Id);
             if (existingDiscount == null)
             {
                 throw new NotFoundException("Discount not found");
             }
-            _dbContext.Discount.Remove(existingDiscount);
+            _dbContext.Discounts.Remove(existingDiscount);
             await _dbContext.SaveChangesAsync();
     
             return true;
@@ -60,17 +60,17 @@ namespace TechLap.API.Services.Repositories.Repositories.Discounts
 
         public async Task<IReadOnlyList<Discount>> GetAllAsync(Expression<Func<Discount, bool>> predicate)
         {
-            var discounts = await _dbContext.Discount.Where(predicate).ToListAsync();
+            var discounts = await _dbContext.Discounts.Where(predicate).ToListAsync();
             if (!discounts.Any())
             {
                 throw new NotFoundException("");
             }
-            return await _dbContext.Discount.Where(predicate).ToListAsync();
+            return await _dbContext.Discounts.Where(predicate).ToListAsync();
         }
 
         public async Task<Discount?> GetByIdAsync(int id)
         {
-            var discount = await _dbContext.Discount.Where(o => o.Id == id).FirstOrDefaultAsync();
+            var discount = await _dbContext.Discounts.Where(o => o.Id == id).FirstOrDefaultAsync();
             if (discount == null)
             {
                 throw new NotFoundException("Not found any discount with id: " + id);
@@ -80,12 +80,12 @@ namespace TechLap.API.Services.Repositories.Repositories.Discounts
 
         public async Task<Discount> AddAsync(Discount entity)
         {
-            var discountList = await _dbContext.Discount.Where(o => o.DiscountCode.ToLower().Contains(entity.DiscountCode.ToLower())).ToListAsync();
+            var discountList = await _dbContext.Discounts.Where(o => o.DiscountCode.ToLower().Contains(entity.DiscountCode.ToLower())).ToListAsync();
             if (discountList.Any())
             {
                 throw new BadRequestException("Discount Code has existed");
             }
-            await _dbContext.Discount.AddAsync(entity);
+            await _dbContext.Discounts.AddAsync(entity);
             await _dbContext.SaveChangesAsync();
             return entity;
         }
@@ -98,7 +98,7 @@ namespace TechLap.API.Services.Repositories.Repositories.Discounts
             //     throw new NotFoundException("Discount not found");
             // }
             
-            _dbContext.Discount.Update(entity);
+            _dbContext.Discounts.Update(entity);
             await _dbContext.SaveChangesAsync();
             return true; 
         }
@@ -106,7 +106,7 @@ namespace TechLap.API.Services.Repositories.Repositories.Discounts
         public async Task<bool> UpdateDiscountAsync(int id, UpdateAdminDiscountRequest request)
         {
             // Tìm discount hiện có theo id
-            var existingDiscount = await _dbContext.Discount.FindAsync(id);
+            var existingDiscount = await _dbContext.Discounts.FindAsync(id);
             if (existingDiscount == null)
             {
                 throw new NotFoundException("Discount not found");
@@ -116,7 +116,7 @@ namespace TechLap.API.Services.Repositories.Repositories.Discounts
             existingDiscount.EndDate = request.EndDate;
             existingDiscount.UsageLimit = request.UsageLimit;
             existingDiscount.LastModifiedDate = DateTime.Now;
-            _dbContext.Discount.Update(existingDiscount);
+            _dbContext.Discounts.Update(existingDiscount);
             await _dbContext.SaveChangesAsync();
     
             return true;
