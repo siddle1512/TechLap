@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TechLap.WPFAdmin"
         mc:Ignorable="d"
-        Title="Dashboard" Height="600" Width="1000">
+        Title="Dashboard" Height="900" Width="1600">
 
     <!-- Link to theme -->
     <Window.Resources>

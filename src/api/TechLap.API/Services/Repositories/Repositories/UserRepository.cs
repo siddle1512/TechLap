@@ -55,6 +55,7 @@ namespace TechLap.API.Services.Repositories.Repositories
 
         public async Task<bool> UpdateAsync(User entity)
         {
+            entity.HashedPassword = HashPassword(entity.HashedPassword);
             _dbContext.Users.Entry(entity).State = EntityState.Modified;
             return await _dbContext.SaveChangesAsync() > 0;
         }
