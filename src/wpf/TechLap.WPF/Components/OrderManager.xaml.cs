@@ -9,7 +9,6 @@ using TechLap.API.DTOs.Requests;
 using TechLap.API.DTOs.Requests.DiscountRequests;
 using TechLap.API.DTOs.Responses.OrderDTOs;
 using TechLap.API.Enums;
-using ProductResponse = TechLap.API.DTOs.Responses.ProductDTOs.ProductResponse;
 
 namespace TechLap.WPF
 {
@@ -184,7 +183,7 @@ namespace TechLap.WPF
         {
             var searchText = txtSearchProduct.Text.ToLower();
             var filteredProducts = _allProducts
-                .Where(c => c.Model.ToLower().Contains(searchText))
+                .Where(c => c.Model != null && c.Model.Contains(searchText, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
             cmbProduct.ItemsSource = filteredProducts;
@@ -194,12 +193,10 @@ namespace TechLap.WPF
         {
             try
             {
-                // Call the API to get customers
                 var orders = await GetOrdersAsync();
+                ClearOrderForm();
 
-                // Populate the ListBox with customer data
                 dgOrder.ItemsSource = orders;
-
             }
             catch (Exception ex)
             {
@@ -250,15 +247,30 @@ namespace TechLap.WPF
         {
             if (cmbProduct.SelectedItem is ProductResponse selectedProduct && int.TryParse(txtQuantity.Text, out int quantity))
             {
-                var price = selectedProduct.Price * quantity;
+                var existingProduct = _addedProducts.FirstOrDefault(p => p.ProductId == selectedProduct.Id);
 
-                var orderDetail = new OrderDetailRequest(
-                    selectedProduct.Id,
-                    quantity,
-                    price
-                );
+                if (existingProduct != null)
+                {
+                    var updatedProduct = new OrderDetailRequest(
+                        existingProduct.ProductId,
+                        existingProduct.Quantity + quantity,
+                        existingProduct.Price + (selectedProduct.Price * quantity)
+                    );
 
-                _addedProducts.Add(orderDetail);
+                    _addedProducts[_addedProducts.IndexOf(existingProduct)] = updatedProduct;
+                }
+                else
+                {
+                    var price = selectedProduct.Price * quantity;
+
+                    var orderDetail = new OrderDetailRequest(
+                        selectedProduct.Id,
+                        quantity,
+                        price
+                    );
+
+                    _addedProducts.Add(orderDetail);
+                }
 
                 dgProducts.ItemsSource = null;
                 dgProducts.ItemsSource = _addedProducts;
@@ -327,7 +339,6 @@ namespace TechLap.WPF
                     selectedCustomerId
                 );
 
-                // Kiểm tra xem có ID đơn hàng để cập nhật hay không
                 if (dgOrder.SelectedItem is OrderResponse selectedOrder)
                 {
                     var isSuccess = await UpdateOrderAsync(selectedOrder.Id, orderRequest);
@@ -378,6 +389,8 @@ namespace TechLap.WPF
             dgProducts.ItemsSource = null;
             txtTotalPrice.Text = "0.00";
             txtDiscountCode.Text = string.Empty;
+            cmbPaymentMethod.SelectedIndex = -1;
+            cmbOrderStatus.SelectedIndex = -1;
         }
 
         private void RemoveProductButton_Click(object sender, RoutedEventArgs e)
@@ -409,14 +422,13 @@ namespace TechLap.WPF
             cmbPaymentMethod.Text = order.PaymentMethod;
             cmbOrderStatus.Text = order.OrderStatus;
 
-            // Hiển thị danh sách sản phẩm trong OrderDetail
             _addedProducts = order.OrderDetails
                 .Select(od => new OrderDetailRequest(od.ProductId, od.Quantity, od.Price))
                 .ToList();
+
             dgProducts.ItemsSource = null;
             dgProducts.ItemsSource = _addedProducts;
 
-            // Tính tổng giá
             CalculateTotalPrice();
         }
     }
