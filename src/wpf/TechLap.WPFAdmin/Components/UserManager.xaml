@@ -32,9 +32,10 @@
             <ComboBoxItem Content="Inactive"/>
             <ComboBoxItem Content="Suspended"/>
         </ComboBox>
-        <Button x:Name="btnSave" Content="Save" HorizontalAlignment="Left" Margin="107,260,0,0" VerticalAlignment="Top" Width="200" Click="btnSave_Click"/>
-
-        <DataGrid x:Name="dgUser" Margin="320,40,10,10" AutoGenerateColumns="False" CanUserAddRows="False">
+        <Button x:Name="btnSave" Content="Save" HorizontalAlignment="Left" Margin="55,273,0,0" VerticalAlignment="Top" Width="200" Click="btnSave_Click"/>
+        <Label x:Name="lblMessage" Content="" HorizontalAlignment="Left" Margin="155,327,0,0" VerticalAlignment="Top"/>
+        
+        <DataGrid x:Name="dgUser" Margin="320,63,10,10" AutoGenerateColumns="False" CanUserAddRows="False">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Full Name" Binding="{Binding FullName}" Width="*"/>
                 <DataGridTextColumn Header="Birth Year" Binding="{Binding BirthYear}" Width="*"/>
@@ -43,11 +44,17 @@
                 <DataGridTextColumn Header="Phone Number" Binding="{Binding PhoneNumber}" Width="*"/>
                 <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="*"/>
                 <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*"/>
-
+                <DataGridTemplateColumn Header="Edit Action">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Click="btnEditUser">Edit</Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
 
-        <Button x:Name="btnLoadUsers" Content="Load Users" HorizontalAlignment="Left" Margin="320,10,0,0" VerticalAlignment="Top" Width="470" Click="btnLoadUsers_Click"/>
+        <Button x:Name="btnLoadUsers" Content="Load Users" HorizontalAlignment="Left" Margin="376,16,0,0" VerticalAlignment="Top" Width="358" Click="btnLoadUsers_Click"/>
         <TextBox x:Name="txtUserId" Visibility="Hidden" HorizontalAlignment="Left" Margin="135,309,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120"/>
     </Grid>
 </UserControl>
