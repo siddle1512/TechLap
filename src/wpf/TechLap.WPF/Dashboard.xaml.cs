@@ -32,7 +32,7 @@ namespace TechLap.WPF
 
         private void LaptopManagement_Click(object sender, RoutedEventArgs e)
         {
-            //MainContentArea.Content = new LaptopManager();  // Load Laptop management UserControl
+            MainContentArea.Content = new ProductManager();  // Load Laptop management UserControl
         }
 
         private void CategoryManagement_Click(object sender, RoutedEventArgs e)
