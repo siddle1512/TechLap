@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using TechLap.WPF.Chat;
 
 namespace TechLap.WPF
 {
@@ -62,7 +63,7 @@ namespace TechLap.WPF
 
         private void GroupChat_Click(object sender, RoutedEventArgs e)
         {
-            //MainContentArea.Content = new GroupChatControl();  // Load Group Chat UserControl
+            MainContentArea.Content = new ChatControl();
         }
 
         private void CustomerManager_Click(object sender, RoutedEventArgs e)
