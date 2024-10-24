@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
+using System.Configuration;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -8,7 +9,7 @@ namespace TechLap.WPF.Chat
     public partial class ChatControl : UserControl
     {
         private HubConnection _connection;
-        private const string ApiUrl = "https://localhost:7097/api/chat/history"; // Địa chỉ API để lấy lịch sử tin nhắn
+        private string ApiUrl = ConfigurationManager.AppSettings["ApiEndpoint"];
 
         public ChatControl()
         {
@@ -19,7 +20,7 @@ namespace TechLap.WPF.Chat
         private async void InitializeSignalR()
         {
             _connection = new HubConnectionBuilder()
-                .WithUrl("https://localhost:7170/chatHub", options =>
+                .WithUrl($"{ApiUrl}/chatHub", options =>
                 {
                     options.AccessTokenProvider = () => Task.FromResult(GlobalState.Token);
                 })

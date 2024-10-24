@@ -107,6 +107,8 @@ namespace TechLap.WPF
                 var response = await _httpClient.PostAsync($"api/discounts/{discountCode}", content);
 
                 return response.IsSuccessStatusCode;
+
+
             }
             catch (Exception ex)
             {

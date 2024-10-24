@@ -15,7 +15,7 @@
         <ComboBox x:Name="cmbProduct" DisplayMemberPath="Model" SelectedValuePath="Id" SelectionChanged="ProductComboBox_SelectionChanged" HorizontalAlignment="Left" Margin="115,40,0,0" VerticalAlignment="Top" Width="200"/>
         <TextBox x:Name="txtQuantity" TextChanged="QuantityTextBox_TextChanged" HorizontalAlignment="Left" Margin="115,72,0,0" VerticalAlignment="Top" Width="200"/>
         <TextBox x:Name="txtPrice" IsReadOnly="True" HorizontalAlignment="Left" Margin="115,103,0,0" VerticalAlignment="Top" Width="200"/>
-        <Button x:Name="btnAddProduct" Content="Add Product" HorizontalAlignment="Left" Margin="115,140,0,0" VerticalAlignment="Top" Width="200" Click="AddProductButton_Click"/>
+        <Button x:Name="btnAddProduct" Content="Add Product" HorizontalAlignment="Left" Margin="115,140,0,0" VerticalAlignment="Top" Width="200" Click="AddProductButton_Click" Height="20"/>
         <DataGrid x:Name="dgProducts" Margin="2,179,485,271" AutoGenerateColumns="False" CanUserAddRows="False">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Product ID" Binding="{Binding ProductId}" Width="75"/>
