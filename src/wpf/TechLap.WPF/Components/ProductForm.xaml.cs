@@ -25,7 +25,7 @@ namespace TechLap.WPF
             VgaTextBox.Text = product.Vga;
             ScreenSizeTextBox.Text = product.ScreenSize;
             HardDiskTextBox.Text = product.HardDisk;
-            OsTextBox.Text = product.OperatingSystem;
+            OsTextBox.Text = product.Os;
             PriceTextBox.Text = product.Price.ToString();
             StockTextBox.Text = product.Stock.ToString();
             ImageTextBox.Text = product.Image;
@@ -34,7 +34,7 @@ namespace TechLap.WPF
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            // Kiểm tra các trường bắt buộc
+            
             if (string.IsNullOrWhiteSpace(BrandTextBox.Text) ||
                 string.IsNullOrWhiteSpace(ModelTextBox.Text) ||
                 string.IsNullOrWhiteSpace(CpuTextBox.Text) ||
@@ -46,7 +46,7 @@ namespace TechLap.WPF
                 return;
             }
 
-            // Tạo Product mới hoặc cập nhật Product hiện tại
+         
             Product = new ProductResponse
             {
                 Id = Product?.Id ?? 0,
@@ -57,14 +57,14 @@ namespace TechLap.WPF
                 Vga = VgaTextBox.Text,
                 ScreenSize = ScreenSizeTextBox.Text,
                 HardDisk = HardDiskTextBox.Text,
-                OperatingSystem = OsTextBox.Text,
-                Price = price,        // Sử dụng biến price đã được kiểm tra
-                Stock = stock,        // Sử dụng biến stock đã được kiểm tra
+                Os = OsTextBox.Text,
+                Price = price,        
+                Stock = stock,        
                 Image = ImageTextBox.Text,
-                CategoryId = (int)CategoryComboBox.SelectedValue // Kiểm tra giá trị của CategoryComboBox
+                CategoryId = 1,
             };
 
-            // Gửi sự kiện ProductSaved
+        
             ProductSaved?.Invoke(Product);
         }
 

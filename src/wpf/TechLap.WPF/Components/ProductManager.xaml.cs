@@ -166,7 +166,7 @@ namespace TechLap.WPF
         public string? Vga { get; set; }
         public string? ScreenSize { get; set; }
         public string? HardDisk { get; set; }
-        public string? OperatingSystem { get; set; }
+        public string? Os { get; set; }
         public decimal Price { get; set; }
         public int Stock { get; set; }
         public string? Image { get; set; }
