@@ -1,5 +1,4 @@
-
-using TechLap.WPF.Hubs;
+using TechLap.Razor.Hubbs;
 
 var builder = WebApplication.CreateBuilder(args);
 

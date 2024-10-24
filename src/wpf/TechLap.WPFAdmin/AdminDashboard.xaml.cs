@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
-using System;
-using System.Windows;
-using System.Windows.Controls;
-
+﻿using System.Windows;
+using TechLap.WPFAdmin.Components;
+using TechLap.WPFAdmin.ChatNew;
 namespace TechLap.WPFAdmin
 {
     public partial class AdminDashboard : Window
@@ -39,12 +37,7 @@ namespace TechLap.WPFAdmin
 
         private void Chat_Click(object sender, RoutedEventArgs e)
         {
-            // Hiển thị giao diện Chat
-            DashboardContent.Visibility = Visibility.Collapsed;
-            ChatContent.Visibility = Visibility.Visible;
-
-            // Xóa nội dung chat cũ
-            MessageContainer.Children.Clear();
+            MainContentArea.Content = new ChatNewControl();
         }
 
         private async void SendMessage_Click(object sender, RoutedEventArgs e)
