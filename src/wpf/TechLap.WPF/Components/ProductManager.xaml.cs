@@ -66,20 +66,37 @@ namespace TechLap.WPF
             }
         }
 
-        private void AddProduct_Click(object sender, RoutedEventArgs e)
+        private async void AddProduct_Click(object sender, RoutedEventArgs e)
         {
-            ProductForm.Visibility = Visibility.Visible;
-            ProductForm.LoadProduct(new ProductResponse());
+            try
+            {
+                ProductForm.Visibility = Visibility.Visible;
+            var newProduct = new ProductResponse();
+            await ProductForm.LoadCategoriesAsync();
+            ProductForm.LoadProduct(newProduct);
             ProductForm.ProductSaved += OnProductFormSaved;
         }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "API Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+}
 
-        private void UpdateProduct_Click(object sender, RoutedEventArgs e)
+        private async void UpdateProduct_Click(object sender, RoutedEventArgs e)
         {
             if (ProductDataGrid.SelectedItem is ProductResponse selectedProduct)
             {
-                ProductForm.Visibility = Visibility.Visible;
-                ProductForm.LoadProduct(selectedProduct);
-                ProductForm.ProductSaved += OnProductFormSaved;
+                try
+                {
+                    ProductForm.Visibility = Visibility.Visible;
+                    await ProductForm.LoadCategoriesAsync();
+                    ProductForm.LoadProduct(selectedProduct);
+                    ProductForm.ProductSaved += OnProductFormSaved;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error: {ex.Message}", "API Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
             else
             {
