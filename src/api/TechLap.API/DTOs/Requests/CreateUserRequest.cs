@@ -11,6 +11,6 @@ namespace TechLap.API.DTOs.Requests
         string HashedPassword,
         string AvatarPath,
         string Address,
-        UserStatus Status = UserStatus.Inactive
+        UserStatus Status
     );
 }
