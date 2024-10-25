@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using TechLap.API.DTOs.Requests;
 using TechLap.API.DTOs.Responses.ProductDTOs;
+using TechLap.API.DTOs.Responses.ProductRespones;
 using TechLap.API.Exceptions;
 using TechLap.API.Mapper;
 using TechLap.API.Models;
@@ -85,6 +86,16 @@ namespace TechLap.API.Controllers
             await _productRepository.DeleteAsync(existingProduct);
 
             return CreateResponse<string>(true, "Request processed successfully.", HttpStatusCode.OK);
+        }
+        
+        [HttpPost]
+        [Authorize(Roles = "User")]
+        [Route("searchConfiguration")]
+        public async Task<IActionResult> GetProductsConfiguration( SearchProductsRequest request)
+        {
+            var products = await _productRepository.SearchProductsAsync(request);
+            var response = LazyMapper.Mapper.Map<IEnumerable<ProductResponse>>(products);
+            return CreateResponse<IEnumerable<ProductResponse>>(true, "Request processed successfully.", HttpStatusCode.OK, response);
         }
     }
 }

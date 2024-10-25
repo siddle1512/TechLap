@@ -1,5 +1,4 @@
 using System.Configuration;
-using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -14,11 +13,8 @@ using TechLap.API.Models;
 
 namespace TechLap.WPF.DiscountsWindow
 {
-    public partial class DiscountWindow : UserControl
+    public partial class DiscountWindow
     {
-        private List<Discount>? _discounts;
-
-
         public DiscountWindow()
         {
             InitializeComponent();
@@ -147,24 +143,50 @@ namespace TechLap.WPF.DiscountsWindow
 
         private async void Save_Click(object sender, RoutedEventArgs e)
         {
-            // Set up HttpClient with the correct headers
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", GlobalState.Token);
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-            // Kiểm tra và chuyển đổi giá trị từ các TextBox
-            if (string.IsNullOrWhiteSpace(DiscountCodeTextBox.Text) ||
-                !decimal.TryParse(PercentageTextBox.Text, out var discountPercentage) ||
-                !DateTime.TryParse(EndDateTextBox.Text, out var endDate) ||
-                !int.TryParse(UsageLimitTextBox.Text, out var usageLimit))
+            // Lấy dữ liệu từ các TextBox và DatePicker
+            string discountCode = DiscountCodeTextBox.Text;
+            if (string.IsNullOrWhiteSpace(discountCode) ||
+                discountCode.Length < 3 ||
+                discountCode.Length > 20)
             {
-                MessageBox.Show("Error: Please ensure all fields are filled out correctly.");
+                MessageBox.Show("Mã giảm giá phải có độ dài từ 4 đến 20 ký tự.",
+                    "Lỗi Nhập Liệu",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return; // Dừng thực hiện nếu mã giảm giá không hợp lệ
+            }
+
+            if (!decimal.TryParse(PercentageTextBox.Text, out var discountPercentage) || discountPercentage < 1 ||
+                discountPercentage > 100)
+            {
+                MessageBox.Show("Phần trăm giảm giá không hợp lệ. Vui lòng nhập một số trong khoảng từ 1 đến 100.",
+                    "Lỗi Nhập Liệu",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!int.TryParse(UsageLimitTextBox.Text, out var usageLimit) || usageLimit <= 0)
+            {
+                MessageBox.Show("Giới hạn sử dụng không hợp lệ. Vui lòng nhập một số nguyên dương.",
+                    "Lỗi Nhập Liệu",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!DateTime.TryParse(EndDateTextBox.Text, out var endDate) || endDate <= DateTime.Now.Date)
+            {
+                MessageBox.Show("Ngày hết hạn phải sau ngày hôm nay.",
+                    "Lỗi Nhập Liệu",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
                 return;
             }
 
             // Tạo request body
             var discountToUpdate = new UpdateAdminDiscountRequest(
-                DiscountCodeTextBox.Text,
+                discountCode,
                 discountPercentage,
                 endDate,
                 usageLimit
@@ -175,53 +197,59 @@ namespace TechLap.WPF.DiscountsWindow
 
             try
             {
-                // Gửi yêu cầu PUT đến API
-                HttpResponseMessage response = await client.PutAsJsonAsync(apiUrl, discountToUpdate);
-
-                // Kiểm tra mã trạng thái HTTP
-                if (!response.IsSuccessStatusCode)
+                // Thiết lập HttpClient với các tiêu đề đúng
+                using (var client = new HttpClient())
                 {
-                    string responseBody = await response.Content.ReadAsStringAsync();
-                    if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    client.DefaultRequestHeaders.Authorization =
+                        new AuthenticationHeaderValue("Bearer", GlobalState.Token);
+                    client.DefaultRequestHeaders.Accept.Clear();
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                    HttpResponseMessage response = await client.PutAsJsonAsync(apiUrl, discountToUpdate);
+
+                    if (!response.IsSuccessStatusCode)
                     {
-                        MessageBox.Show("Error: Discount not found. Please check the ID and try again.");
-                    }
-                    else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                    {
-                        MessageBox.Show("Error: Unauthorized. Please check your token and try again.");
-                    }
-                    else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
-                    {
-                        MessageBox.Show($"Error: Bad request. {responseBody}");
-                    }
-                    else
-                    {
-                        MessageBox.Show($"Error: {response.StatusCode} - {responseBody}");
+                        string responseBody = await response.Content.ReadAsStringAsync();
+                        MessageBox.Show($"Lỗi khi cập nhật: {response.StatusCode} - {responseBody}",
+                            "Lỗi",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
+                        return;
                     }
 
-                    return;
+                    string jsonResponse = await response.Content.ReadAsStringAsync();
+                    var apiResponse = JsonConvert.DeserializeObject<UpdateRespones<string>>(jsonResponse);
+
+                    if (apiResponse == null || !apiResponse.IsSuccess)
+                    {
+                        MessageBox.Show($"Lỗi: {apiResponse?.Message ?? "Không thể cập nhật giảm giá."}",
+                            "Lỗi",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
+                        return;
+                    }
+
+                    MessageBox.Show("Giảm giá đã được cập nhật thành công!",
+                        "Thành Công",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
                 }
-
-                // Deserialize JSON response thành ApiResponse
-                string jsonResponse = await response.Content.ReadAsStringAsync();
-                var apiResponse = JsonConvert.DeserializeObject<ApiResponse<UpdateAdminDiscountRequest>>(jsonResponse);
-
-                if (apiResponse == null || !apiResponse.IsSuccess || apiResponse.Data == null)
-                {
-                    MessageBox.Show("Error: Failed to update discount. Please check your input and try again.");
-                    return;
-                }
-
-                MessageBox.Show("Discount updated successfully!");
             }
             catch (HttpRequestException ex)
             {
-                MessageBox.Show("Error during request: " + ex.Message);
+                MessageBox.Show("Lỗi trong quá trình gửi yêu cầu: " + ex.Message,
+                    "Lỗi Kết Nối",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
             catch (JsonSerializationException ex)
             {
-                MessageBox.Show("Error during deserialization: " + ex.Message);
+                MessageBox.Show("Lỗi trong quá trình phân tích cú pháp: " + ex.Message,
+                    "Lỗi",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
+
             LoadDiscounts(sender, e);
         }
 
@@ -233,7 +261,7 @@ namespace TechLap.WPF.DiscountsWindow
             {
                 // Hiển thị thông báo cảnh báo trước khi xóa
                 MessageBoxResult result = MessageBox.Show(
-                    "Are you sure you want to delete this discount?",
+                    "Bạn có muốn xóa discount này không?",
                     "Delete Confirmation",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Warning);
@@ -264,7 +292,7 @@ namespace TechLap.WPF.DiscountsWindow
 
                         response.EnsureSuccessStatusCode();
 
-                        MessageBox.Show("Discount deleted successfully!");
+                        MessageBox.Show("Xóa thành công!");
 
                         // Tải lại danh sách discount sau khi xóa
                         LoadDiscounts(sender, e);
@@ -272,13 +300,13 @@ namespace TechLap.WPF.DiscountsWindow
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Error deleting discount: " + ex.Message);
+                        MessageBox.Show("Lỗi xóa discount " + ex.Message);
                     }
                 }
             }
             else
             {
-                MessageBox.Show("Please select a discount to delete.");
+                MessageBox.Show("Hãy chọn discount muốn xóa");
             }
         }
 
