@@ -1,24 +1,26 @@
 ﻿using System.Net;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TechLap.API.DTOs.Requests.DiscountRequests;
 using TechLap.API.DTOs.Responses.DiscountRespones;
+using TechLap.API.Exceptions;
 using TechLap.API.Mapper;
 using TechLap.API.Models;
 using TechLap.API.Services.Repositories.IRepositories.Discounts;
 
 namespace TechLap.API.Controllers
 {
-    public class DiscountsController : BaseController<DiscountsController>
+    [Route("/api/discounts")]
+    public class DiscountController : BaseController<DiscountController>
     {
         private IDiscountRepository _discountRepository;
-        public DiscountsController(IDiscountRepository discountRepository)
+        public DiscountController(IDiscountRepository discountRepository)
         {
             _discountRepository = discountRepository;
         }
        
-        // [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,User")]
         [HttpGet]
-        [Route("api/discount/view")]
         public async Task<IActionResult> GetDiscounts()
         {
             
@@ -28,9 +30,9 @@ namespace TechLap.API.Controllers
     
         }
         
-        // [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "User")]
         [HttpPost]
-        [Route("api/discount/create")]
+        [Route("create")]
         public async Task<IActionResult> CreateDiscount(AddAdminDiscountRequest request)
         {
             Discount discount = LazyMapper.Mapper.Map<Discount>(request);
@@ -38,25 +40,31 @@ namespace TechLap.API.Controllers
             return CreateResponse(true, "Request processed successfully.", HttpStatusCode.OK, "Add discountId " + discount.Id + " successfully");
         }
         
-        // [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "User")]
         [HttpPost]
-        [Route("api/discount/delete")]
+        [Route("delete")]
         public async Task<IActionResult> DeleteDiscount(DeleteAdminDiscountRequest request)
         {
             Discount discount = LazyMapper.Mapper.Map<Discount>(request);
             await _discountRepository.DeleteAsync(discount);
             return CreateResponse(true, "Request processed successfully.", HttpStatusCode.OK, "Remove discountId " + discount.Id + " successfully");
         }
-  
+        [Authorize(Roles = "User")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateDiscount(int id, UpdateAdminDiscountRequest request)
+        public async Task<IActionResult> UpdateDiscount(int id, [FromBody]UpdateAdminDiscountRequest request)
         {
-            Discount discount = LazyMapper.Mapper.Map<Discount>(request);
-            await _discountRepository.UpdateDiscountAsync(id, request);
-            return CreateResponse(true, "Request processed successfully.", HttpStatusCode.OK, "Update discountId " + discount.Id + " successfully");
+            var discount = await _discountRepository.GetByIdAsync(id);
+            if (discount == null) throw new NotFoundException("Discount not found.");
+            
+            var updatedDiscount = LazyMapper.Mapper.Map(request, discount);
+            
+
+            await _discountRepository.UpdateAsync(updatedDiscount);
+
+            return CreateResponse<string>(true, "Discount updated successfully.", HttpStatusCode.OK, "Updated discountId " + discount.Id);
         }
 
-        // [Authorize(Roles = "User")]
+        [Authorize(Roles = "User")]
         [HttpPost("{discountCode}")]
         public async Task<IActionResult> ApplyDiscount(string discountCode, ApplyUserDiscountRequest request)
         {
@@ -66,9 +74,8 @@ namespace TechLap.API.Controllers
 
         }
         
-        // [Authorize(Roles = "Admin")]
-        [HttpGet]
-        [Route("/api/discount/{id:int}")]
+        [Authorize(Roles = "Admin,User")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetDiscountIdAsync(int id)
         {
             var discount = await _discountRepository.GetByIdAsync(id);

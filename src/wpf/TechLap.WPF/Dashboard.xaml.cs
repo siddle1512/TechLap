@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using TechLap.WPF.DiscountsWindow;
 using TechLap.WPF.Chat;
 
 namespace TechLap.WPF
@@ -58,7 +59,7 @@ namespace TechLap.WPF
 
         private void PromotionManagement_Click(object sender, RoutedEventArgs e)
         {
-            //MainContentArea.Content = new PromotionManager();  // Load Promotion management UserControl
+            MainContentArea.Content = new DiscountWindow();  // Load Promotion management UserControl
         }
 
         private void GroupChat_Click(object sender, RoutedEventArgs e)

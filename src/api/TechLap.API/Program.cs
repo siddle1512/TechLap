@@ -13,7 +13,6 @@ using TechLap.API.Services.Filters;
 using TechLap.API.Services.Repositories.IRepositories;
 using TechLap.API.Services.Repositories.IRepositories.Discounts;
 using TechLap.API.Services.Repositories.Repositories;
-using TechLap.API.Services.Repositories.Repositories.Discounts;
 using TechLap.API.Validators;
 using TechLap.API.Validators.DiscountsValidators;
 

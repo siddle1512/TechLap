@@ -1,0 +1,187 @@
+<UserControl x:Class="TechLap.WPF.DiscountsWindow.DiscountWindow"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:TechLap.WPF"
+             mc:Ignorable="d"
+             Background="White" 
+             HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+    <Grid>
+        <!-- Định nghĩa các hàng trong Grid -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Hàng cho tiêu đề -->
+            <RowDefinition Height="*"/>    <!-- Hàng cho DataGrid -->
+            <RowDefinition Height="Auto"/>  <!-- Hàng cho ProgressBar -->
+            <RowDefinition Height="Auto"/>  <!-- Hàng cho Form chỉnh sửa -->
+            <RowDefinition Height="Auto"/>  <!-- Hàng cho nút Load -->
+        </Grid.RowDefinitions>
+
+        <!-- Tiêu đề -->
+        <TextBlock Text="Discount Management" FontSize="24" FontWeight="Bold" 
+                   HorizontalAlignment="Center" Margin="10" 
+                   Grid.Row="0"/>
+
+        <!-- DataGrid để hiển thị danh sách Discount -->
+        <DataGrid x:Name="DiscountDataGrid" AutoGenerateColumns="False" 
+                  CanUserAddRows="False" CanUserDeleteRows="False" 
+                  IsReadOnly="True" SelectionMode="Single" 
+                  Margin="10" HeadersVisibility="Column"
+                  VerticalAlignment="Stretch" HorizontalAlignment="Stretch" 
+                  Grid.Row="1">
+
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="Select" Width="50">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <RadioButton GroupName="DiscountGroup" 
+                                         IsChecked="{Binding IsSelected, Mode=TwoWay}" 
+                                         Checked="RadioButton_Checked"/>
+
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="40"/>
+                <DataGridTextColumn Header="Discount Code" Binding="{Binding DiscountCode}" Width="150"/>
+                <DataGridTextColumn Header="Percentage" Binding="{Binding DiscountPercentage}" Width="70"/>
+                <DataGridTextColumn Header="Start Date" Binding="{Binding StartDate}" Width="100"/>
+                <DataGridTextColumn Header="End Date" Binding="{Binding EndDate}" Width="100"/>
+                <DataGridTextColumn Header="Usage Limit" Binding="{Binding UsageLimit}" Width="80"/>
+                <DataGridTextColumn Header="Times Used" Binding="{Binding TimesUsed}" Width="80"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- ProgressBar để hiển thị khi load data -->
+        <ProgressBar x:Name="progressBar" Height="20" IsIndeterminate="True" 
+                     Visibility="Collapsed" VerticalAlignment="Bottom" Margin="10,10,10,0" 
+                     Grid.Row="2" />
+
+        <!-- Form hiển thị chi tiết Discount khi chọn, được bọc trong Border -->
+        <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="5" Padding="10" 
+                HorizontalAlignment="Left" VerticalAlignment="Top" 
+                Width="400" Height="auto" Margin="10" 
+                Grid.Row="3">
+            <StackPanel>
+                <TextBlock Text="Discount Details" FontSize="18" FontWeight="Bold" Margin="5" />
+
+                <!-- ID -->
+                <Grid Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="ID" Foreground="Gray" Margin="0,0,5,5" 
+                               IsHitTestVisible="False" Grid.Column="0" HorizontalAlignment="Left"/>
+                    <TextBox x:Name="IdTextBox" 
+                             Text="{Binding SelectedDiscount.Id, Mode=TwoWay}" 
+                             Grid.Column="1" IsReadOnly="True"/>
+                </Grid>
+
+                <!-- Discount Code -->
+                <Grid Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Discount Code" Foreground="Gray" Margin="0,0,5,5" 
+                               IsHitTestVisible="False" Grid.Column="0" HorizontalAlignment="Left"/>
+                    <TextBox x:Name="DiscountCodeTextBox" 
+                             Text="{Binding SelectedDiscount.DiscountCode, Mode=TwoWay}" 
+                             Grid.Column="1"/>
+                </Grid>
+
+                <!-- Discount Percentage -->
+                <Grid Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Discount Percentage" Foreground="Gray" Margin="0,0,5,5" 
+                               IsHitTestVisible="False" Grid.Column="0" HorizontalAlignment="Left"/>
+                    <TextBox x:Name="PercentageTextBox" 
+                             Text="{Binding SelectedDiscount.DiscountPercentage, Mode=TwoWay}" 
+                             Grid.Column="1"/>
+                </Grid>
+
+                <!-- Start Date -->
+                <Grid Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Start Date" Foreground="Gray" Margin="0,0,5,5" 
+                               IsHitTestVisible="False" Grid.Column="0" HorizontalAlignment="Left"/>
+                    <TextBox x:Name="StartDateTextBox" 
+                             Text="{Binding SelectedDiscount.StartDate, Mode=TwoWay}" 
+                             Grid.Column="1"/>
+                </Grid>
+
+                <!-- End Date -->
+                <Grid Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="End Date" Foreground="Gray" Margin="0,0,5,5" 
+                               IsHitTestVisible="False" Grid.Column="0" HorizontalAlignment="Left"/>
+                    <TextBox x:Name="EndDateTextBox" 
+                             Text="{Binding SelectedDiscount.EndDate, Mode=TwoWay}" 
+                             Grid.Column="1"/>
+                </Grid>
+
+                <!-- Usage Limit -->
+                <Grid Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Usage Limit" Foreground="Gray" Margin="0,0,5,5" 
+                               IsHitTestVisible="False" Grid.Column="0" HorizontalAlignment="Left"/>
+                    <TextBox x:Name="UsageLimitTextBox" 
+                             Text="{Binding SelectedDiscount.UsageLimit, Mode=TwoWay}" 
+                             Grid.Column="1"/>
+                </Grid>
+
+                <!-- Times Used -->
+                <Grid Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Times Used" Foreground="Gray" Margin="0,0,5,5" 
+                               IsHitTestVisible="False" Grid.Column="0" HorizontalAlignment="Left"/>
+                    <TextBox x:Name="TimesUsedTextBox" 
+                             Text="{Binding SelectedDiscount.TimesUsed, Mode=TwoWay}" 
+                             Grid.Column="1"/>
+                </Grid>
+
+                <!-- Status -->
+                <!-- <Grid Margin="5"> -->
+                <!--     <Grid.ColumnDefinitions> -->
+                <!--         <ColumnDefinition Width="200"/> -->
+                <!--         <ColumnDefinition Width="*"/> -->
+                <!--     </Grid.ColumnDefinitions> -->
+                <!--     <TextBlock Text="Status" Foreground="Gray" Margin="0,0,5,5"  -->
+                <!--                IsHitTestVisible="False" Grid.Column="0" HorizontalAlignment="Left"/> -->
+                <!--     <TextBox x:Name="StatusTextBox"  -->
+                <!--              Text="{Binding SelectedDiscount.Status, Mode=TwoWay}"  -->
+                <!--              Grid.Column="1"/> -->
+                <!-- </Grid> -->
+
+                <!-- Nút Save -->
+                <Button Content="Save" Width="100" Margin="5" Click="Save_Click"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Nút Load để tải danh sách Discount -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" 
+                    VerticalAlignment="Top" Margin="0,10,10,10" 
+                    Grid.Row="4">
+            <Button Content="Add New" Width="100" Margin="5" Click="AddNew_Click"/>
+            <Button Content="Load Discount" Width="100" Margin="5" Click="LoadDiscounts"/>
+            <Button Content="Delete" Width="100" Margin="5" Click="Delete_Click"/> <!-- Nút xóa -->
+        </StackPanel>
+    </Grid>
+</UserControl>
