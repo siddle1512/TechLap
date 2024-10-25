@@ -2,7 +2,6 @@
 
 {
     public record SearchProductsRequest(
-            int id,
             string Brand,
             string Model,
             string Cpu,

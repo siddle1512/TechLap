@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using TechLap.WPF.DiscountsWindow;
 using TechLap.WPF.Chat;
+using TechLap.WPF.Components;
 
 namespace TechLap.WPF
 {
@@ -54,7 +55,7 @@ namespace TechLap.WPF
 
         private void SearchLaptop_Click(object sender, RoutedEventArgs e)
         {
-            //MainContentArea.Content = new LaptopSearch();  // Load Laptop search UserControl
+            MainContentArea.Content = new SearchProducts();  // Load Laptop search UserControl
         }
 
         private void PromotionManagement_Click(object sender, RoutedEventArgs e)
