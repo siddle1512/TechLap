@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TechLap.API.DTOs.Requests.DiscountRequests;
 using TechLap.API.DTOs.Responses.DiscountRespones;
+using TechLap.API.Exceptions;
 using TechLap.API.Mapper;
 using TechLap.API.Models;
 using TechLap.API.Services.Repositories.IRepositories.Discounts;
@@ -50,11 +51,17 @@ namespace TechLap.API.Controllers
         }
         [Authorize(Roles = "User")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateDiscount(int id, UpdateAdminDiscountRequest request)
+        public async Task<IActionResult> UpdateDiscount(int id, [FromBody]UpdateAdminDiscountRequest request)
         {
-            Discount discount = LazyMapper.Mapper.Map<Discount>(request);
-            await _discountRepository.UpdateDiscountAsync(id, request);
-            return CreateResponse(true, "Request processed successfully.", HttpStatusCode.OK, "Update discountId " + discount.Id + " successfully");
+            var discount = await _discountRepository.GetByIdAsync(id);
+            if (discount == null) throw new NotFoundException("Discount not found.");
+            
+            var updatedDiscount = LazyMapper.Mapper.Map(request, discount);
+            
+
+            await _discountRepository.UpdateAsync(updatedDiscount);
+
+            return CreateResponse<string>(true, "Discount updated successfully.", HttpStatusCode.OK, "Updated discountId " + discount.Id);
         }
 
         [Authorize(Roles = "User")]

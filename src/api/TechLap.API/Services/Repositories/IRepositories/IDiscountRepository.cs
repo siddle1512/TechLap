@@ -6,7 +6,6 @@ namespace TechLap.API.Services.Repositories.IRepositories.Discounts
 {
     public interface IDiscountRepository : IAsyncRepository<Discount>
     {
-            Task<bool> UpdateDiscountAsync(int id, UpdateAdminDiscountRequest request);
             Task<Discount> ApplyDiscountAsync(string discountCode);
 
 
