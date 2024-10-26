@@ -19,7 +19,7 @@ namespace TechLap.WPFAdmin.ChatNew
         public ChatNewControl()
         {
             InitializeComponent();
-            LoadUsers(); // Tải danh sách người dùng
+            LoadUsers(); 
             InitializeSignalR();
         }
         private async void LoadUsers()
@@ -40,8 +40,8 @@ namespace TechLap.WPFAdmin.ChatNew
                     UserList.Items.Add(new { Name = userName, Id = userId });
                 }
 
-                UserList.DisplayMemberPath = "Name"; // Hiển thị tên người dùng
-                UserList.SelectedValuePath = "Id"; // Lưu ID của người dùng
+                UserList.DisplayMemberPath = "Name"; 
+                UserList.SelectedValuePath = "Id"; 
             }
             else
             {
@@ -62,26 +62,23 @@ namespace TechLap.WPFAdmin.ChatNew
             {
                 Dispatcher.Invoke(() =>
                 {
-                    // Chỉ hiển thị tin nhắn nếu nó đến từ một người khác
                     if (user != "Admin")
                     {
                         DisplayMessage(user, message);
                     }
                     else
                     {
-                        // Nếu là tin nhắn từ admin, bạn có thể hiển thị trực tiếp mà không cần kiểm tra
                         DisplayMessage("Admin", message);
                     }
                 });
             });
-
 
             await _connection.StartAsync();
         }
 
         private async void LoadChatHistory()
         {
-            if (_selectedUserId == 0) return; // Kiểm tra nếu không có người dùng nào được chọn
+            if (_selectedUserId == 0) return;
             try
             {
                 var client = new HttpClient();
@@ -91,13 +88,19 @@ namespace TechLap.WPFAdmin.ChatNew
                 if (response.IsSuccessStatusCode)
                 {
                     var responseBody = await response.Content.ReadAsStringAsync();
-                    var chatMessages = JArray.Parse(responseBody);
+                    var chatHistoryObject = JObject.Parse(responseBody);
 
-                    foreach (var message in chatMessages)
+                    if (chatHistoryObject["data"] != null)
                     {
-                        string sender = message["isFromAdmin"].Value<bool>() ? "Admin" : "User";
-                        string content = message["messageContent"].Value<string>();
-                        DisplayMessage(sender, content);
+                        var chatMessages = chatHistoryObject["data"] as JArray;
+                        ChatHistory.Children.Clear(); 
+
+                        foreach (var message in chatMessages)
+                        {
+                            string sender = message["isFromAdmin"].Value<bool>() ? "Admin" : "User";
+                            string content = message["messageContent"].Value<string>();
+                            DisplayMessage(sender, content);
+                        }
                     }
                 }
                 else
@@ -117,7 +120,7 @@ namespace TechLap.WPFAdmin.ChatNew
 
             if (string.IsNullOrEmpty(messageContent) || _selectedUserId == 0)
             {
-                return; // Không gửi nếu ô nhập rỗng hoặc không có người dùng được chọn
+                return; 
             }
 
             var messageData = new
@@ -133,13 +136,12 @@ namespace TechLap.WPFAdmin.ChatNew
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", GlobalState.Token);
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await httpClient.PostAsync("https://localhost:7097/api/chat/send", content);
+                var response = await httpClient.PostAsync($"{ApiUrl}/api/chat/send", content);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // Gửi tin nhắn qua SignalR
-                    await _connection.InvokeAsync("SendMessage", "Admin", messageContent); // Gửi tin nhắn qua SignalR
-                    MessageInput.Text = string.Empty; // Xóa nội dung ô nhập
+                    await _connection.InvokeAsync("SendMessage", "Admin", messageContent);
+                    MessageInput.Text = string.Empty; 
                 }
                 else
                 {
@@ -152,35 +154,26 @@ namespace TechLap.WPFAdmin.ChatNew
 
         private void UserList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var selectedUser = UserList.SelectedItem as dynamic; // Sử dụng dynamic để truy cập ID
+            var selectedUser = UserList.SelectedItem as dynamic; 
             if (selectedUser != null)
             {
-                _selectedUserId = selectedUser.Id; // Lưu ID của người dùng đã chọn
-                LoadChatHistory(); // Tải lịch sử chat cho người dùng đã chọn
+                int newSelectedUserId = selectedUser.Id; 
+                if (_selectedUserId != newSelectedUserId) 
+                {
+                    _selectedUserId = newSelectedUserId;
+                    LoadChatHistory(); 
+                }
             }
         }
+
 
         private void MessageInput_GotFocus(object sender, RoutedEventArgs e)
         {
             if (MessageInput.Text == "Enter your message...")
             {
-                MessageInput.Text = string.Empty; // Xóa placeholder khi có focus
+                MessageInput.Text = string.Empty; 
             }
         }
-
-        //public void DisplayMessage(string user, string message)
-        //{
-        //    var messageBlock = new TextBlock
-        //    {
-        //        Text = $"{user}: {message}",
-        //        Margin = new Thickness(5)
-        //    };
-
-        //    // Thay đổi màu sắc của tin nhắn dựa trên người gửi
-        //    messageBlock.Foreground = user == "Admin" ? Brushes.Blue : Brushes.Green;
-
-        //    ChatHistory.Children.Add(messageBlock); // Thêm tin nhắn vào UI container
-        //}
 
         private HashSet<string> _sentMessages = new HashSet<string>();
 
@@ -188,7 +181,6 @@ namespace TechLap.WPFAdmin.ChatNew
         {
             string uniqueMessageKey = $"{user}: {message}";
 
-            // Chỉ hiển thị tin nhắn nếu nó chưa được hiển thị
             if (_sentMessages.Add(uniqueMessageKey))
             {
                 var messageBlock = new TextBlock
@@ -198,7 +190,7 @@ namespace TechLap.WPFAdmin.ChatNew
                     Foreground = user == "Admin" ? Brushes.Blue : Brushes.Green
                 };
 
-                ChatHistory.Children.Add(messageBlock); // Thêm tin nhắn vào UI container
+                ChatHistory.Children.Add(messageBlock); 
             }
         }
     }

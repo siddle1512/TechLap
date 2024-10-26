@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using TechLap.API.Data;
+using TechLap.API.Enums;
 using TechLap.API.Exceptions;
 using TechLap.API.Models;
 using TechLap.API.Services.Repositories.IRepositories;
@@ -25,8 +26,37 @@ namespace TechLap.API.Services.Repositories.Repositories
 
         public async Task<ChatMessage> SendChatMessageAsync(ChatMessage message)
         {
-            // Debugging: In ra chi tiết của message
-            Console.WriteLine($"SenderId: {message.SenderId}, ReceiverId: {message.ReceiverId}, MessageContent: {message.MessageContent}, SentAt: {message.SentAt}");
+            // Kiểm tra người gửi tồn tại và active
+            var sender = await _dbContext.Users.FindAsync(message.SenderId);
+            if (sender == null)
+            {
+                throw new NotFoundException($"Sender with ID {message.SenderId} not found");
+            }
+            if (sender.Status != UserStatus.Active)
+            {
+                throw new InvalidOperationException($"Sender account is not active");
+            }
+
+            // Kiểm tra người nhận tồn tại và active  
+            var receiver = await _dbContext.Users.FindAsync(message.ReceiverId);
+            if (receiver == null)
+            {
+                throw new NotFoundException($"Receiver with ID {message.ReceiverId} not found");
+            }
+            if (receiver.Status != UserStatus.Active)
+            {
+                throw new InvalidOperationException($"Receiver account is not active");
+            }
+
+            // Kiểm tra nếu người gửi là User thì người nhận phải là Admin
+            if (!message.IsFromAdmin)
+            {
+                var isReceiverAdmin = await _dbContext.Admins.AnyAsync(a => a.Id == message.ReceiverId);
+                if (!isReceiverAdmin)
+                {
+                    throw new InvalidOperationException("Users can only send messages to Admins");
+                }
+            }
 
             await _dbContext.ChatMessages.AddAsync(message);
             await _dbContext.SaveChangesAsync();

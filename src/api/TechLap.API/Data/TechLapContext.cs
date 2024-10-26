@@ -70,14 +70,16 @@ namespace TechLap.API.Data
                 .HasForeignKey(o => o.DiscountId);
 
             modelBuilder.Entity<ChatMessage>()
-                .HasOne<User>()
-                .WithMany()
-                .HasForeignKey(cm => cm.SenderId);
+                .HasOne(cm => cm.Sender) // Chỉ định rõ ràng đối tượng Sender
+                .WithMany() // Có thể chỉ định nhiều tin nhắn
+                .HasForeignKey(cm => cm.SenderId)
+                .OnDelete(DeleteBehavior.Restrict); // Thiết lập hành vi xóa nếu cần
 
             modelBuilder.Entity<ChatMessage>()
-                .HasOne<User>()
-                .WithMany()
-                .HasForeignKey(cm => cm.ReceiverId);
+                .HasOne(cm => cm.Receiver) // Chỉ định rõ ràng đối tượng Receiver
+                .WithMany() // Có thể chỉ định nhiều tin nhắn
+                .HasForeignKey(cm => cm.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict); // Thiết lập hành vi xóa nếu cần
         }
     }
 }

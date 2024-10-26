@@ -1,4 +1,9 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
+using Newtonsoft.Json;
+using System.Configuration;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Configuration;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,7 +15,6 @@ namespace TechLap.WPF.Chat
     {
         private HubConnection _connection;
         private string ApiUrl = ConfigurationManager.AppSettings["ApiEndpoint"];
-
         public ChatControl()
         {
             InitializeComponent();
@@ -43,10 +47,10 @@ namespace TechLap.WPF.Chat
             {
                 Text = $"{user}: {message}",
                 Margin = new Thickness(5),
-                Foreground = user == "User" ? Brushes.Green : Brushes.Blue // Màu xanh cho admin, màu xanh lá cho user
+                Foreground = user == "User" ? Brushes.Green : Brushes.Blue 
             };
 
-            ChatHistory.Children.Add(messageBlock); // Thêm tin nhắn vào UI container
+            ChatHistory.Children.Add(messageBlock);
         }
 
 
@@ -56,19 +60,41 @@ namespace TechLap.WPF.Chat
 
             if (string.IsNullOrEmpty(messageContent) || messageContent == "Enter your message...")
             {
-                return; // Nếu ô nhập rỗng hoặc chứa placeholder, không gửi
+                return; 
             }
 
-            // Gửi tin nhắn qua SignalR
-            await _connection.InvokeAsync("SendMessage", "User", messageContent);
-            MessageInput.Text = string.Empty; // Xóa ô nhập
+            var messageData = new
+            {
+                receiverId = 1,
+                messageContent = messageContent
+            };
+
+            var json = JsonConvert.SerializeObject(messageData);
+
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", GlobalState.Token);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await httpClient.PostAsync($"{ApiUrl}/api/chat/send", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    await _connection.InvokeAsync("SendMessage", "User", messageContent);
+                    MessageInput.Text = string.Empty;
+                }
+                else
+                {
+                    MessageBox.Show("Error sending message: " + response.ReasonPhrase);
+                }
+            }
         }
+
 
         private void MessageInput_GotFocus(object sender, RoutedEventArgs e)
         {
             if (MessageInput.Text == "Enter your message...")
             {
-                MessageInput.Text = string.Empty; // Xóa placeholder khi có focus
+                MessageInput.Text = string.Empty;
             }
         }
     }
