@@ -35,6 +35,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<UpdateDiscountValidators>()
 builder.Services.AddValidatorsFromAssemblyContaining<ApplyDiscountValidators>();
 
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSignalR();
 
 //Authen in swagger
 builder.Services.AddSwaggerGen(options =>

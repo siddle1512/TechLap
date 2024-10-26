@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using Newtonsoft.Json;
+using System.Configuration;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -14,7 +15,6 @@ namespace TechLap.WPF.Chat
     {
         private HubConnection _connection;
         private string ApiUrl = ConfigurationManager.AppSettings["ApiEndpoint"];
-
         public ChatControl()
         {
             InitializeComponent();
@@ -75,7 +75,7 @@ namespace TechLap.WPF.Chat
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", GlobalState.Token);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await httpClient.PostAsync("https://localhost:7097/api/chat/send", content);
+                var response = await httpClient.PostAsync($"{ApiUrl}/api/chat/send", content);
 
                 if (response.IsSuccessStatusCode)
                 {

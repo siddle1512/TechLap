@@ -136,7 +136,7 @@ namespace TechLap.WPFAdmin.ChatNew
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", GlobalState.Token);
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await httpClient.PostAsync("https://localhost:7097/api/chat/send", content);
+                var response = await httpClient.PostAsync($"{ApiUrl}/api/chat/send", content);
 
                 if (response.IsSuccessStatusCode)
                 {
