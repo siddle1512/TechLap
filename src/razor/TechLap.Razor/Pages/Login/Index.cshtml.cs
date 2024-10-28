@@ -58,7 +58,7 @@ namespace TechLap.Razor.Pages.Login
                             HttpOnly = true,
                             Expires = DateTimeOffset.UtcNow.AddHours(1)
                         });
-
+                        TempData["Token"] = token;
                         return RedirectToPage("/Index");
                     }
                     else

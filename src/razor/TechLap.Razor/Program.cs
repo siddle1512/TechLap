@@ -7,17 +7,6 @@ builder.Services.AddSignalR();
 builder.Services.AddHttpClient();
 builder.Services.AddSession();
 
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(builder =>
-    {
-        builder.WithOrigins("https://localhost:7170") // Add your specific URL
-               .AllowAnyHeader()
-               .AllowAnyMethod()
-               .AllowCredentials();
-    });
-});
-
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -25,10 +14,8 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
-
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
 app.UseAuthorization();
