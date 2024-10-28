@@ -86,6 +86,17 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("SignalRPolicy", policy =>
+    {
+        policy.WithOrigins("https://localhost:7170")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 //sqlServerConnectionString
 builder.Services.AddDbContext<TechLapContext>(options =>
     options.UseSqlServer(connectionString));
@@ -126,7 +137,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseCors("SignalRPolicy");
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
