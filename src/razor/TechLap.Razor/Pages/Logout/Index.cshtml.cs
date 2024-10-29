@@ -5,10 +5,9 @@ namespace TechLap.Razor.Pages.Logout
 {
     public class IndexModel : PageModel
     {
-        public async Task<IActionResult> OnGet()
+        public IActionResult OnGet()
         {
             HttpContext.Response.Cookies.Delete("AuthToken");
-
             return RedirectToPage("/Index");
         }
 
