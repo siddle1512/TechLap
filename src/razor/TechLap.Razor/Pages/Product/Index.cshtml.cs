@@ -98,30 +98,34 @@ namespace TechLap.Razor.Pages.Product
             return Page();
         }
 
-        public async Task<IActionResult> OnEdit(ProductResponse updatedProduct)
+        public async Task<IActionResult> OnPostEdit(ProductResponse updatedProduct)
         {
+            _logger.LogInformation("B?t ð?u th?c hi?n c?p nh?t s?n ph?m v?i ID: {Id}", updatedProduct.Id);
             if (!ModelState.IsValid)
             {
                 ErrorMessage = "Invalid product data.";
-                return Page();
+                _logger.LogWarning("ModelState không h?p l? khi c?p nh?t s?n ph?m v?i ID: {Id}", updatedProduct.Id);
+                RedirectToPage("/Product");
             }
 
             var token = Request.Cookies["AuthToken"];
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             string apiEndpoint = $"{_configuration["ApiEndPoint"]}/api/products/{updatedProduct.Id}";
+            _logger.LogInformation("API endpoint cho c?p nh?t s?n ph?m: {ApiEndpoint}", apiEndpoint);
 
             try
             {
                 var jsonContent = JsonConvert.SerializeObject(updatedProduct);
+                _logger.LogInformation("D? li?u JSON cho s?n ph?m c?p nh?t: {JsonContent}", jsonContent);
                 var response = await client.PutAsync(apiEndpoint, new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json"));
 
                 if (response.IsSuccessStatusCode)
                 {
-                    Products = await LoadProductsAsync();
-                    return RedirectToPage(); 
+                    _logger.LogInformation("C?p nh?t s?n ph?m thành công v?i ID: {Id}", updatedProduct.Id);
+                    RedirectToPage("/Product"); 
                 }
-
+                _logger.LogWarning("Yêu c?u PUT th?t b?i v?i m? tr?ng thái: {StatusCode}", response.StatusCode);
                 ErrorMessage = "Failed to update product.";
             }
             catch (HttpRequestException ex)
@@ -130,9 +134,10 @@ namespace TechLap.Razor.Pages.Product
                 ErrorMessage = "An error occurred. Please try again later.";
             }
 
+            _logger.LogInformation("Hoàn t?t phýõng th?c OnPostEdit v?i ID s?n ph?m: {Id}", updatedProduct.Id);
             return Page();
         }
-
+         
         public async Task<IActionResult> OnDelete(int id)
         {
             var token = Request.Cookies["AuthToken"];
