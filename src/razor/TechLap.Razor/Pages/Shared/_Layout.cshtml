@@ -24,12 +24,6 @@
             <div class="container">
                 <div class="row">
                     <div class="col-sm-6">
-                        <div class="contactinfo">
-                            <ul class="nav nav-pills">
-                                <li><a href="#"><i class="fa fa-phone"></i> +84 918 955 649</a></li>
-                                <li><a href="#"><i class="fa fa-envelope"></i> binhhdqe170217@fpt.edu.vn</a></li>
-                            </ul>
-                        </div>
                     </div>
                     <div class="col-sm-6">
                         <div class="social-icons pull-right">
@@ -47,15 +41,9 @@
             <!--header-middle-->
             <div class="container">
                 <div class="row">
-                    <div class="col-sm-4">
-                        <div class="logo pull-left">
-                            <a href="/"><img src="images/home/logo.png" alt="Logo" /></a>
-                        </div>
-                    </div>
                     <div class="col-sm-8">
                         <div class="shop-menu pull-right">
                             <ul class="nav navbar-nav">
-                                <li><a href="#"><i class="fa fa-user"></i> Account</a></li>
                                 @if (Context.Request.Cookies["AuthToken"] != null)
                                 {
                                     <li><a href="/Logout"><i class="fa fa-unlock"></i> Logout</a></li>
@@ -78,17 +66,11 @@
                     <div class="col-sm-9">
                         <div class="mainmenu pull-left">
                             <ul class="nav navbar-nav" id="navbar">
-                                <li><a href="/" class="nav-link">Home</a></li>
                                 <li><a href="/Product" class="nav-link">Manage Laptops</a></li>
                                 <li><a href="/Order" class="nav-link">Manage Order</a></li>
                                 <li><a href="/Discount" class="nav-link">Manage Promotions</a></li>
                                 <li><a href="/Chat" class="nav-link">Group Chat</a></li>
                             </ul>
-                        </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <div class="search_box pull-right">
-                            <input type="text" placeholder="Search" />
                         </div>
                     </div>
                 </div>

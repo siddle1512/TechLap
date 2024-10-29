@@ -138,7 +138,7 @@ namespace TechLap.Razor.Pages.Product
             return Page();
         }
          
-        public async Task<IActionResult> OnDelete(int id)
+        public async Task<IActionResult> OnGetDelete(int? id)
         {
             var token = Request.Cookies["AuthToken"];
             var client = _httpClientFactory.CreateClient();
@@ -162,7 +162,6 @@ namespace TechLap.Razor.Pages.Product
                 _logger.LogError(ex, "Error deleting product.");
                 ErrorMessage = "An error occurred. Please try again later.";
             }
-
             return Page();
         }
 
