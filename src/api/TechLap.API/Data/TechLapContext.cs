@@ -52,7 +52,8 @@ namespace TechLap.API.Data
             modelBuilder.Entity<Product>()
                 .HasMany(o => o.OrderDetails)
                 .WithOne(o => o.Product)
-                .HasForeignKey(o => o.ProductId);
+                .HasForeignKey(o => o.ProductId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
             modelBuilder.Entity<User>()
                 .HasMany(o => o.Orders)
@@ -62,7 +63,8 @@ namespace TechLap.API.Data
             modelBuilder.Entity<Category>()
                 .HasMany(o => o.Products)
                 .WithOne(o => o.Category)
-                .HasForeignKey(o => o.CategoryId);
+                .HasForeignKey(o => o.CategoryId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
             modelBuilder.Entity<Discount>()
                 .HasMany(o => o.Orders)

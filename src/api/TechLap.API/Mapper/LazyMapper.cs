@@ -17,6 +17,7 @@ namespace TechLap.API.Mapper
                 cfg.AddProfile<OrderMappingProfile>();
                 cfg.AddProfile<ChatMessageMappingProfile>();
                 cfg.AddProfile<CustomerMappingProfile>();
+                cfg.AddProfile<CategoryMappingProfile>();
             });
 
             return config.CreateMapper();

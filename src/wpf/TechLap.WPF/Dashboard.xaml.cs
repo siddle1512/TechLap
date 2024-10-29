@@ -1,8 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -17,9 +12,6 @@ using TechLap.WPF.Components;
 
 namespace TechLap.WPF
 {
-    /// <summary>
-    /// Interaction logic for Dashboard.xaml
-    /// </summary>
     public partial class Dashboard : Window
     {
         public Dashboard()
@@ -40,7 +32,7 @@ namespace TechLap.WPF
 
         private void CategoryManagement_Click(object sender, RoutedEventArgs e)
         {
-            //MainContentArea.Content = new CategoryManager();  // Load Category management UserControl
+            MainContentArea.Content = new Components.CategoryManager();  // Load Category management UserControl
         }
 
         private void UserManagement_Click(object sender, RoutedEventArgs e)

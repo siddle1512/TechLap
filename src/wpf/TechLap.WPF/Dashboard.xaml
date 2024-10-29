@@ -20,6 +20,7 @@
             <Button Content="Quản lý nhân viên" Click="EmployeeManagement_Click"/>
             <Button Content="Quản lý laptop" Click="LaptopManagement_Click"/>
             <Button Content="Quản lý Catagory" Click="CategoryManagement_Click"/>
+            <Button Click="CategoryManagement_Click">Category Management</Button>
             <Button Content="Quản lý đơn hàng" Click="OrderManagement_Click"/>
             <Button Content="Quản lý khách hàng" Click="CustomerManager_Click"/>
             <Button Content="Search laptop" Click="SearchLaptop_Click"/>
