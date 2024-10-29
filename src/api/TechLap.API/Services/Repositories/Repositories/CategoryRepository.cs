@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Linq;
 using System.Linq.Expressions;
 using TechLap.API.Data;
 using TechLap.API.Exceptions;
@@ -14,14 +13,17 @@ namespace TechLap.API.Services.Repositories.Repositories
         {
         }
 
-        public Task<Category> AddAsync(Category entity)
+        public async Task<Category> AddAsync(Category entity)
         {
-            throw new NotImplementedException();
+            await _dbContext.AddAsync(entity);
+            await _dbContext.SaveChangesAsync();
+            return entity;
         }
 
-        public Task<bool> DeleteAsync(Category entity)
+        public async Task<bool> DeleteAsync(Category entity)
         {
-            throw new NotImplementedException();
+            _dbContext.Categories.Remove(entity);
+            return await _dbContext.SaveChangesAsync() > 0;
         }
 
         public async Task<IReadOnlyList<Category>> GetAllAsync(Expression<Func<Category, bool>> predicate)
@@ -44,9 +46,10 @@ namespace TechLap.API.Services.Repositories.Repositories
             return category;
         }
 
-        public Task<bool> UpdateAsync(Category entity)
+        public async Task<bool> UpdateAsync(Category entity)
         {
-            throw new NotImplementedException();
+            _dbContext.Categories.Entry(entity).State = EntityState.Modified;
+            return await _dbContext.SaveChangesAsync() > 0;
         }
     }
 }
