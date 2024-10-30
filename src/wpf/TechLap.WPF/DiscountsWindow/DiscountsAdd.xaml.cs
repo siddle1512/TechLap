@@ -1,10 +1,12 @@
-// DiscountsAdd.xaml.cs
-
+using System.Collections.ObjectModel;
 using System.Net.Http;
 using System.Windows;
 using TechLap.API.Models;
 using System.Configuration;
 using System.Net.Http.Headers;
+using TechLap.API.DTOs.Requests.DiscountRequests;
+using TechLap.API.Enums;
+using System.Linq;
 
 namespace TechLap.WPF.DiscountsWindow
 {
@@ -13,14 +15,18 @@ namespace TechLap.WPF.DiscountsWindow
         public DiscountsAdd()
         {
             InitializeComponent();
+            DataContext = this; // Đặt DataContext cho liên kết
         }
+
+
+        public DiscountStatus SelectedDiscountStatus { get; set; } // Thêm thuộc tính để giữ giá trị đã chọn
 
         private async void Add_Click(object sender, RoutedEventArgs e)
         {
             // Lấy dữ liệu từ các TextBox và DatePicker
             string discountCode = DiscountCodeTextBox.Text;
             if (string.IsNullOrWhiteSpace(discountCode) ||
-                discountCode.Length < 3 ||
+                discountCode.Length < 4 || // Đã sửa độ dài tối thiểu
                 discountCode.Length > 20)
             {
                 MessageBox.Show("Mã giảm giá phải có độ dài từ 4 đến 20 ký tự.",
@@ -31,7 +37,8 @@ namespace TechLap.WPF.DiscountsWindow
             }
 
             // Kiểm tra và phân tích các giá trị đầu vào
-            if (!decimal.TryParse(DiscountPercentageTextBox.Text, out var discountPercentage) || discountPercentage < 1 || discountPercentage > 100)
+            if (!decimal.TryParse(DiscountPercentageTextBox.Text, out var discountPercentage) ||
+                discountPercentage < 1 || discountPercentage > 100)
             {
                 MessageBox.Show("Phần trăm giảm giá không hợp lệ. Vui lòng nhập một số trong khoảng từ 1 đến 100.",
                     "Lỗi Nhập Liệu",
@@ -39,7 +46,6 @@ namespace TechLap.WPF.DiscountsWindow
                     MessageBoxImage.Warning);
                 return;
             }
-
 
             if (!int.TryParse(UsageLimitTextBox.Text, out var usageLimit) || usageLimit <= 0)
             {
@@ -59,61 +65,72 @@ namespace TechLap.WPF.DiscountsWindow
                 return;
             }
 
-            var newDiscount = new Discount
-            {
-                DiscountCode = discountCode,
-                DiscountPercentage = discountPercentage,
-                EndDate = EndDatePicker.SelectedDate.Value,
-                UsageLimit = usageLimit,
-                TimesUsed = 0 // Giá trị mặc định cho TimesUsed
-            };
+            DateTime endDate = EndDatePicker.SelectedDate.Value; // Sử dụng ngày đã chọn
+            DateTime startDate = StartDatePicker.SelectedDate ?? DateTime.Now; // Nếu không có ngày bắt đầu, sử dụng ngày hiện tại
 
-            try
+            // Kiểm tra trạng thái đã chọn
+            if (SelectedDiscountStatus != null)
             {
-                using (var client = new HttpClient())
+                var newDiscount = new AddAdminDiscountRequest(
+                    discountCode,
+                    discountPercentage,
+                    startDate,
+                    endDate,
+                    usageLimit,
+                    SelectedDiscountStatus
+                );
+
+                try
                 {
-                    client.DefaultRequestHeaders.Authorization =
-                        new AuthenticationHeaderValue("Bearer", GlobalState.Token);
-                    client.DefaultRequestHeaders.Add("Accept", "application/json");
-
-                    // Gửi yêu cầu POST để thêm discount
-                    HttpResponseMessage response = await client.PostAsJsonAsync(
-                        ConfigurationManager.AppSettings["ApiEndpoint"] + "/api/discounts/create", newDiscount);
-
-                    // Đảm bảo phản hồi thành công
-                    if (response.IsSuccessStatusCode)
+                    using (var client = new HttpClient())
                     {
-                        MessageBox.Show("Giảm giá đã được thêm thành công!",
-                            "Thành Công",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Information);
-                        this.DialogResult = true; // Chỉ ra rằng việc thêm thành công
-                        Close(); // Đóng dialog
-                    }
-                    else
-                    {
-                        // Xử lý các lỗi không thành công
-                        string errorMessage = await response.Content.ReadAsStringAsync();
-                        MessageBox.Show($"Lỗi khi thêm giảm giá: Mã đã tồn tại",
-                            "Lỗi",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Error);
+                        client.DefaultRequestHeaders.Authorization =
+                            new AuthenticationHeaderValue("Bearer", GlobalState.Token);
+                        client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+                        // Gửi yêu cầu POST để thêm discount
+                        HttpResponseMessage response = await client.PostAsJsonAsync(
+                            ConfigurationManager.AppSettings["ApiEndpoint"] + "/api/discounts/create", newDiscount);
+
+                        // Đảm bảo phản hồi thành công
+                        if (response.IsSuccessStatusCode)
+                        {
+                            MessageBox.Show("Giảm giá đã được thêm thành công!",
+                                "Thành Công",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Information);
+                            this.DialogResult = true; // Chỉ ra rằng việc thêm thành công
+                            Close(); // Đóng dialog
+                        }
+                        else
+                        {
+                            // Xử lý các lỗi không thành công
+                            string errorMessage = await response.Content.ReadAsStringAsync();
+                            MessageBox.Show($"Lỗi khi thêm giảm giá: Mã đã tồn tại",
+                                "Lỗi",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Error);
+                        }
                     }
                 }
+                catch (HttpRequestException ex)
+                {
+                    MessageBox.Show("Lỗi kết nối: " + ex.Message,
+                        "Lỗi Kết Nối",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Lỗi khi thêm giảm giá: " + ex.Message,
+                        "Lỗi",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
             }
-            catch (HttpRequestException ex)
+            else
             {
-                MessageBox.Show("Lỗi kết nối: " + ex.Message,
-                    "Lỗi Kết Nối",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi khi thêm giảm giá: " + ex.Message,
-                    "Lỗi",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                MessageBox.Show("Vui lòng chọn trạng thái cho discount.", "Lỗi Nhập Liệu", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }

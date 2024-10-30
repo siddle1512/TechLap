@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -8,6 +9,7 @@ using Newtonsoft.Json;
 using TechLap.API;
 using TechLap.API.DTOs.Requests.DiscountRequests;
 using TechLap.API.DTOs.Responses.DiscountRespones;
+using TechLap.API.Enums;
 using TechLap.API.Exceptions;
 using TechLap.API.Models;
 
@@ -18,8 +20,14 @@ namespace TechLap.WPF.DiscountsWindow
         public DiscountWindow()
         {
             InitializeComponent();
+            DiscountStatusEnumValues = new ObservableCollection<DiscountStatus>(
+                Enum.GetValues(typeof(DiscountStatus)).Cast<DiscountStatus>());
+            
+            
+
             // LoadDiscounts(); // Tải danh sách giảm giá từ API khi khởi động
         }
+        public ObservableCollection<DiscountStatus> DiscountStatusEnumValues { get; set; }
 
         // Lấy danh sách Discount từ API
         private async void LoadDiscounts(object sender, RoutedEventArgs e)
@@ -134,7 +142,8 @@ namespace TechLap.WPF.DiscountsWindow
             StartDateTextBox.Text = _selectedDiscount.StartDate.ToString("yyyy-MM-dd");
             EndDateTextBox.Text = _selectedDiscount.EndDate.ToString("yyyy-MM-dd");
             UsageLimitTextBox.Text = _selectedDiscount.UsageLimit.ToString();
-            TimesUsedTextBox.Text = _selectedDiscount.TimesUsed.ToString();
+            StatusComboBox.SelectedItem = _selectedDiscount.Status;
+            StatusComboBox.ItemsSource = DiscountStatusEnumValues;
             // // Nếu có trường Status thì cũng có thể gán vào tương tự
         }
 
@@ -184,71 +193,68 @@ namespace TechLap.WPF.DiscountsWindow
                 return;
             }
 
-            // Tạo request body
-            var discountToUpdate = new UpdateAdminDiscountRequest(
-                discountCode,
-                discountPercentage,
-                endDate,
-                usageLimit
-            );
+            // Lấy giá trị trạng thái từ ComboBox
+    if (StatusComboBox.SelectedItem is DiscountStatus status)
+    {
+        // Tạo request body
+        var discountToUpdate = new UpdateAdminDiscountRequest(
+            discountCode,
+            discountPercentage,
+            DateTime.Parse(StartDateTextBox.Text),
+            endDate,
+            usageLimit,
+            status
+        );
 
-            // Xác định URL của API
-            string apiUrl = ConfigurationManager.AppSettings["ApiEndpoint"] + "/api/discounts/" + _selectedDiscount.Id;
+        // Xác định URL của API
+        string apiUrl = ConfigurationManager.AppSettings["ApiEndpoint"] + "/api/discounts/" + _selectedDiscount.Id;
 
-            try
+        try
+        {
+            // Thiết lập HttpClient với các tiêu đề đúng
+            using (var client = new HttpClient())
             {
-                // Thiết lập HttpClient với các tiêu đề đúng
-                using (var client = new HttpClient())
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", GlobalState.Token);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                HttpResponseMessage response = await client.PutAsJsonAsync(apiUrl, discountToUpdate);
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    client.DefaultRequestHeaders.Authorization =
-                        new AuthenticationHeaderValue("Bearer", GlobalState.Token);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                    HttpResponseMessage response = await client.PutAsJsonAsync(apiUrl, discountToUpdate);
-
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        string responseBody = await response.Content.ReadAsStringAsync();
-                        MessageBox.Show($"Lỗi khi cập nhật: {response.StatusCode} - {responseBody}",
-                            "Lỗi",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Error);
-                        return;
-                    }
-
-                    string jsonResponse = await response.Content.ReadAsStringAsync();
-                    var apiResponse = JsonConvert.DeserializeObject<UpdateRespones<string>>(jsonResponse);
-
-                    if (apiResponse == null || !apiResponse.IsSuccess)
-                    {
-                        MessageBox.Show($"Lỗi: {apiResponse?.Message ?? "Không thể cập nhật giảm giá."}",
-                            "Lỗi",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Error);
-                        return;
-                    }
-
-                    MessageBox.Show("Giảm giá đã được cập nhật thành công!",
-                        "Thành Công",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Lỗi khi cập nhật: {response.StatusCode} - {responseBody}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
                 }
+
+                string jsonResponse = await response.Content.ReadAsStringAsync();
+                var apiResponse = JsonConvert.DeserializeObject<UpdateRespones<string>>(jsonResponse);
+
+                if (apiResponse == null || !apiResponse.IsSuccess)
+                {
+                    MessageBox.Show($"Lỗi: {apiResponse?.Message ?? "Không thể cập nhật giảm giá."}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                MessageBox.Show("Giảm giá đã được cập nhật thành công!", "Thành Công", MessageBoxButton.OK, MessageBoxImage.Information);
             }
-            catch (HttpRequestException ex)
-            {
-                MessageBox.Show("Lỗi trong quá trình gửi yêu cầu: " + ex.Message,
-                    "Lỗi Kết Nối",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
-            catch (JsonSerializationException ex)
-            {
-                MessageBox.Show("Lỗi trong quá trình phân tích cú pháp: " + ex.Message,
-                    "Lỗi",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
+        }
+        catch (HttpRequestException ex)
+        {
+            MessageBox.Show("Lỗi trong quá trình gửi yêu cầu: " + ex.Message, "Lỗi Kết Nối", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        catch (JsonSerializationException ex)
+        {
+            MessageBox.Show("Lỗi trong quá trình phân tích cú pháp: " + ex.Message, "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        LoadDiscounts(sender, e);
+    }
+    else
+    {
+        MessageBox.Show("Vui lòng chọn trạng thái cho discount.", "Lỗi Nhập Liệu", MessageBoxButton.OK, MessageBoxImage.Warning);
+    }
 
             LoadDiscounts(sender, e);
         }
@@ -319,10 +325,12 @@ namespace TechLap.WPF.DiscountsWindow
             StartDateTextBox.Text = string.Empty;
             EndDateTextBox.Text = string.Empty;
             UsageLimitTextBox.Text = string.Empty;
-            TimesUsedTextBox.Text = string.Empty;
+            StatusComboBox.Text = string.Empty;
 
             // Xóa lựa chọn discount hiện tại
             _selectedDiscount = null;
         }
     }
+    
+    
 }

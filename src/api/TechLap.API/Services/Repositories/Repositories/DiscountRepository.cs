@@ -117,24 +117,6 @@ namespace TechLap.API.Services.Repositories.Repositories
 
             return true;
         }
-
-        // public async Task<bool> UpdateDiscountAsync(Discount entity)
-        // {
-        // // Tìm discount hiện có theo id
-        // var existingDiscount = await _dbContext.Discounts.FindAsync(id);
-        // if (existingDiscount == null)
-        // {
-        //     throw new NotFoundException("Discount not found");
-        // }
-        // existingDiscount.DiscountCode = request.DiscountCode;
-        // existingDiscount.DiscountPercentage = request.DiscountPercentage;
-        // existingDiscount.EndDate = request.EndDate;
-        // existingDiscount.UsageLimit = request.UsageLimit;
-        // existingDiscount.LastModifiedDate = DateTime.Now;
-        // _dbContext.Discounts.Update(existingDiscount);
-        // await _dbContext.SaveChangesAsync();
-        //
-        // return true;
-        // }
+        
     }
 }
