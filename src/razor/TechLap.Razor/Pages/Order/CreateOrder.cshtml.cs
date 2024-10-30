@@ -15,7 +15,7 @@ namespace TechLap.Razor.Pages.Order
         private readonly IConfiguration _configuration;
 
         [BindProperty]
-        public required OrderRequest OrderRequest { get; set; }
+        public OrderRequest OrderRequest { get; set; } = default!;
         [BindProperty]
         public List<OrderDetailRequest> OrderDetailRequest { get; set; } = new List<OrderDetailRequest>();
         public List<ProductResponse>? Products { get; set; } = new List<ProductResponse>();
@@ -97,6 +97,108 @@ namespace TechLap.Razor.Pages.Order
                 _logger.LogError("API call to {Endpoint} failed with status code: {StatusCode}", endpoint, response.StatusCode);
                 return null;
             }
+        }
+
+        public async Task<IActionResult> OnPostAsync()
+        {
+            try
+            {
+                // Debug logging
+                _logger.LogInformation($"Received OrderRequest: {JsonConvert.SerializeObject(OrderRequest)}");
+                _logger.LogInformation($"Received OrderDetailRequest: {JsonConvert.SerializeObject(OrderDetailRequest)}");
+
+                // Initialize OrderDetailRequest if null
+                OrderDetailRequest ??= new List<OrderDetailRequest>();
+
+                // Validate required fields
+                if (OrderRequest.CustomerId == null || OrderRequest.CustomerId == 0)
+                {
+                    ModelState.AddModelError("OrderRequest.CustomerId", "Please select a customer");
+                }
+
+                if (OrderDetailRequest == null || !OrderDetailRequest.Any())
+                {
+                    ModelState.AddModelError("OrderDetailRequest", "Please add at least one product");
+                }
+
+                //if (!ModelState.IsValid)
+                //{
+                //    // Reload the dropdown data before returning the page
+                //    Products = await LoadDataAsync<ProductResponse>("api/products");
+                //    Customers = await LoadDataAsync<CustomerResponse>("api/customers");
+                //    return Page();
+                //}
+
+                // Clean up OrderDetailRequest - remove any invalid entries
+                OrderDetailRequest = OrderDetailRequest
+                    .Where(detail => detail.ProductId != 0 && detail.Quantity > 0)
+                    .ToList();
+
+                // Calculate total price
+                var totalPrice = CalculateTotalPrice();
+
+                // Set order date if not already set
+                var orderDate = OrderRequest.OrderDate == default ? DateTime.Now : OrderRequest.OrderDate;
+
+                // Create order request
+                var newOrderRequest = new OrderRequest(
+                    OrderRequest.OrderDate,
+                    totalPrice,
+                    OrderRequest.Payment,
+                    OrderRequest.Status,
+                    OrderRequest.DiscountId,
+                    OrderDetailRequest, // Ensure OrderDetailRequest is not null
+                    OrderRequest.CustomerId
+                );
+
+                // Log the request being sent to API
+                _logger.LogInformation($"Sending order request to API: {JsonConvert.SerializeObject(newOrderRequest)}");
+
+                // Call API to create order
+                var token = Request.Cookies["AuthToken"];
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+                string? apiEndpoint = _configuration["ApiEndPoint"];
+
+                var response = await client.PostAsJsonAsync($"{apiEndpoint}/api/orders", newOrderRequest);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return RedirectToPage("/Order/Index");
+                }
+
+                // If API call fails, add error and show it to user
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError($"API Error: {errorContent}");
+                ModelState.AddModelError(string.Empty, $"Error occurred while adding the order: {errorContent}");
+
+                // Reload the dropdown data
+                Products = await LoadDataAsync<ProductResponse>("api/products");
+                Customers = await LoadDataAsync<CustomerResponse>("api/customers");
+                return Page();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while processing order creation");
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred while processing your request.");
+
+                // Reload the dropdown data
+                Products = await LoadDataAsync<ProductResponse>("api/products");
+                Customers = await LoadDataAsync<CustomerResponse>("api/customers");
+                return Page();
+            }
+        }
+
+
+        // Method to calculate the total price from OrderDetailRequest
+        private decimal CalculateTotalPrice()
+        {
+            if (OrderDetailRequest == null || !OrderDetailRequest.Any())
+                return 0;
+
+            return OrderDetailRequest
+                .Where(detail => detail.ProductId != 0 && detail.Quantity > 0)
+                .Sum(detail => detail.Price * detail.Quantity);
         }
     }
 }
