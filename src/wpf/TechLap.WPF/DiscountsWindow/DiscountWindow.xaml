@@ -147,20 +147,19 @@
                                IsHitTestVisible="False" Grid.Column="0" HorizontalAlignment="Left" />
                     <TextBox x:Name="UsageLimitTextBox"
                              Text="{Binding SelectedDiscount.UsageLimit, Mode=TwoWay}"
-                             Grid.Column="1" IsEnabled="False" />
+                             Grid.Column="1"  />
                 </Grid>
 
-                <!-- Times Used -->
                 <Grid Margin="5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="200" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Times Used" Foreground="Gray" Margin="0,0,5,5"
+                    <TextBlock Text="Status" Foreground="Gray" Margin="0,0,5,5"
                                IsHitTestVisible="False" Grid.Column="0" HorizontalAlignment="Left" />
-                    <TextBox x:Name="TimesUsedTextBox"
-                             Text="{Binding SelectedDiscount.TimesUsed, Mode=TwoWay}"
-                             Grid.Column="1" />
+                    <ComboBox x:Name="StatusComboBox"
+                              SelectedItem="{Binding SelectedDiscount.Status, Mode=TwoWay}" 
+                              Grid.Column="1" />
                 </Grid>
 
                 <!-- Nút Save -->

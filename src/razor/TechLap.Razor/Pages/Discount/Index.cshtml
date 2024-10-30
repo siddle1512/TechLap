@@ -1,0 +1,357 @@
+@page
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using TechLap.API.Enums
+@model TechLap.Razor.Pages.Discount.IndexModel
+
+@{
+    ViewData["Title"] = "Manage Promotions";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<head>
+    <link href="~/css/discount.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title></title>
+</head>
+
+<div class="container-xl">
+    <div class="table-responsive">
+        <div class="table-wrapper">
+            <div class="table-title">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <h2>Manage <b>Promotions</b></h2>
+                    </div>
+                    <div class="col-sm-6">
+                        <a href="#addOrderModal" class="btn btn-success" data-toggle="modal">
+                            <i class="material-icons" style="vertical-align: middle; margin-right: 5px;">add</i>
+                            <span>Add New Promotions</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <table class="table table-striped table-hover">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th>Id</th>
+                    <th>DiscountCode</th>
+                    <th>DiscountPercentage</th>
+                    <th>StartDate</th>
+                    <th>EndDate</th>
+                    <th>TimesUsed</th>
+                    <th>UsageLimit</th>
+                    <th>CreatedDate</th>
+                    <th>LastModifiedDate</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                @if (Model.Discounts != null && Model.Discounts.Any())
+                {
+                    @foreach (var discounts in Model.Discounts)
+                    {
+                        <tr>
+                            <td>
+                                <span class="custom-radio">
+                                    <input type="radio" id="radio@discounts.Id" class="select-discount" name="selectedDiscount" value="@discounts.Id">
+                                    <label for="radio@discounts.Id"></label>
+                                </span>
+                            </td>
+                            <td>@discounts.Id</td>
+                            <td>
+                                <input type="text" class="form-control" value="@discounts.DiscountCode" disabled/>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control" value="@discounts.DiscountPercentage" disabled/>
+                            </td>
+                            <td>
+                                <input type="date" class="form-control" value="@discounts.StartDate.ToString("yyyy-MM-dd")" disabled/>
+                            </td>
+                            <td>
+                                <input type="date" class="form-control" value="@discounts.EndDate.ToString("yyyy-MM-dd")" disabled/>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control" value="@discounts.TimesUsed" disabled/>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control" value="@discounts.UsageLimit" disabled/>
+                            </td>
+                            <td>
+                                <input type="date" class="form-control" value="@discounts.CreatedDate.ToString("yyyy-MM-dd")" disabled/>
+                            </td>
+                            <td>
+                                <input type="date" class="form-control" value="@discounts.LastModifiedDate.ToString("yyyy-MM-dd")" disabled/>
+                            </td>
+                            <td>
+                                <select class="form-control" asp-for="@discounts.Status" asp-items="Html.GetEnumSelectList<DiscountStatus>()" disabled>
+                                </select>
+                            </td>
+                            <td class="action-buttons">
+                                <a asp-page-handler="EditDiscount" asp-route-id="@discounts.Id" class="edit" data-toggle="modal">
+                                    <i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i>
+                                </a>
+                                <a asp-page-handler="DeleteDiscount" asp-route-id="@discounts.Id" class="delete" data-toggle="modal">
+                                    <i class="material-icons" data-toggle="tooltip" title="Delete">&#xE872;</i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="11" style="text-align:center;">There are no promotions to display</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <div class="clearfix">
+                <div class="hint-text" id="pagination-info"></div>
+                <ul class="pagination justify-content-center"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Modal HTML -->
+<div id="addOrderModal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="AddDiscount">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Promotions</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="page1">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="addProduct">Discount Code</label>
+                                    <input class="form-control mb-3" id="addProduct" type="text" asp-for="NewDiscount.DiscountCode" placeholder="Ex: Code..."/>
+                                </div>
+                                <div class="form-group">
+                                    <label>Discount Percentage</label>
+                                    <input type="text" class="form-control" asp-for="NewDiscount.DiscountPercentage" min="1" max="100" placeholder="Ex: 20" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required/>
+                                </div>
+                                <div class="form-group">
+                                    <label>Start Date</label>
+                                    <input type="date" class="form-control" asp-for="NewDiscount.StartDate"/>
+                                </div>
+                                <div class="form-group">
+                                    <label>End Date</label>
+                                    <input type="date" class="form-control" asp-for="NewDiscount.EndDate"/>
+                                </div>
+                                <div class="form-group">
+                                    <label>Usage Limit</label>
+                                    <input type="text" class="form-control" asp-for="NewDiscount.UsageLimit" placeholder="Ex: 20" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required/>
+                                </div>
+                                <div class="form-group">
+                                    <label for="status">Status</label>
+                                    <select class="form-control" asp-for="NewDiscount.Status" asp-items="Html.GetEnumSelectList<DiscountStatus>()">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <input type="submit" class="btn btn-success" value="Submit"/>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal HTML -->
+@* <div id="editOrderModal" class="modal fade"> *@
+@*     <div class="modal-dialog"> *@
+@*         <div class="modal-content"> *@
+@*             <form method="post" asp-page-handler="EditDiscount"> *@
+@*                 <div class="modal-header"> *@
+@*                     <h4 class="modal-title">Edit Promotion</h4> *@
+@*                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> *@
+@*                 </div> *@
+@*                 <div class="modal-body"> *@
+@*                     <!-- Form fields for Discount details --> *@
+@*                     <div class="form-group"> *@
+@*                         <label>Discount Code</label> *@
+@*                         <input type="text" class="form-control" asp-for="UpdateDiscount.DiscountCode" required> *@
+@*                     </div> *@
+@*                     <div class="form-group"> *@
+@*                         <label>Discount Percentage</label> *@
+@*                         <input type="number" step="0.01" class="form-control" asp-for="UpdateDiscount.DiscountPercentage" required> *@
+@*                     </div> *@
+@*                     <div class="form-group"> *@
+@*                         <label>Start Date</label> *@
+@*                         <input type="datetime-local" class="form-control" asp-for="UpdateDiscount.StartDate" required> *@
+@*                     </div> *@
+@*                     <div class="form-group"> *@
+@*                         <label>End Date</label> *@
+@*                         <input type="datetime-local" class="form-control" asp-for="UpdateDiscount.EndDate" required> *@
+@*                     </div> *@
+@*                     <div class="form-group"> *@
+@*                         <label>Usage Limit</label> *@
+@*                         <input type="number" class="form-control" asp-for="UpdateDiscount.UsageLimit" required> *@
+@*                     </div> *@
+@*                     <div class="form-group"> *@
+@*                         <label>Status</label> *@
+@*                         <select class="form-control" asp-for="UpdateDiscount.Status"> *@
+@*                             <option value="true">Active</option> *@
+@*                             <option value="false">Inactive</option> *@
+@*                         </select> *@
+@*                     </div> *@
+@*                     <input type="hidden" asp-for="UpdateDiscount.Id"/> *@
+@*                 </div> *@
+@*                 <div class="modal-footer"> *@
+@*                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button> *@
+@*                     <input type="submit" class="btn btn-success" value="Save"> *@
+@*                 </div> *@
+@*             </form> *@
+@*         </div> *@
+@*     </div> *@
+@* </div> *@
+
+<!-- Delete Modal HTML -->
+<div id="deleteOrderModal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" asp-page-handler="DeleteDiscount">
+                <div class="modal-header">
+                    <h4 class="modal-title">Delete Promotion</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this Promotion?</p>
+                    <input type="hidden"/>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <input type="submit" class="btn btn-danger" value="Delete">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+   
+    
+    // JavaScript để chuyển đổi giữa hai trang và kiểm tra validate
+    function nextPage() {
+        const name = document.getElementById("name").value.trim();
+        const email = document.getElementById("email").value.trim();
+    
+        // Validate các input trên trang 1
+        if (name && email) {
+            document.getElementById("page1").style.display = "none";
+            document.getElementById("page2").style.display = "block";
+        } else {
+            alert("Please fill out all fields on this page.");
+        }
+    }
+    
+    function prevPage() {
+        document.getElementById("page2").style.display = "none";
+        document.getElementById("page1").style.display = "block";
+    }
+    
+
+    
+    // Phân trang
+    const rowsPerPage = 7;
+    let currentPage = 1;
+    const tableRows = document.querySelectorAll("tbody tr");
+    const totalPages = Math.ceil(tableRows.length / rowsPerPage);
+    
+    function displayPage(page) {
+        if (page < 1 || page > totalPages) return;
+    
+        currentPage = page;
+        const startIndex = (page - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
+    
+        tableRows.forEach((row, index) => {
+            row.style.display = (index >= startIndex && index < endIndex) ? "table-row" : "none";
+        });
+    
+        updatePagination();
+        document.getElementById("pagination-info").innerText = `Page ${currentPage} of ${totalPages}`;
+    }
+    
+    function updatePagination() {
+        const pagination = document.querySelector(".pagination");
+        pagination.innerHTML = `
+                                                    <li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+                                                        <a class="page-link" href="#" onclick="displayPage(currentPage - 1)">Previous</a>
+                                                    </li>
+                                                `;
+    
+        for (let i = 1; i <= totalPages; i++) {
+            pagination.innerHTML += `
+                                                        <li class="page-item ${currentPage === i ? "active" : ""}">
+                                                            <a class="page-link" href="#" onclick="displayPage(${i})">${i}</a>
+                                                        </li>
+                                                    `;
+        }
+    
+        pagination.innerHTML += `
+                                                    <li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
+                                                        <a class="page-link" href="#" onclick="displayPage(currentPage + 1)">Next</a>
+                                                    </li>
+                                                `;
+    }
+    
+    document.addEventListener("DOMContentLoaded", function () {
+        displayPage(1);
+    });
+    
+    // Search & Select Products
+    function myFunction() {
+        document.getElementById("myDropdown").classList.toggle("show");
+    }
+    
+    function filterFunction() {
+        const input = document.getElementById("myInput");
+        const filter = input.value.toUpperCase();
+        const div = document.getElementById("myDropdown");
+        const a = div.getElementsByTagName("a");
+        for (let i = 0; i < a.length; i++) {
+            txtValue = a[i].textContent || a[i].innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                a[i].style.display = "";
+            } else {
+                a[i].style.display = "none";
+            }
+        }
+    }
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const radios = document.querySelectorAll('.select-discount'); // Lấy tất cả radio button cho từng discount
+
+        radios.forEach(radio => {
+            radio.addEventListener('change', function () {
+                // Reset tất cả các input về disabled khi không được chọn
+                document.querySelectorAll('tr').forEach(row => {
+                    const inputs = row.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], select');
+                    inputs.forEach(input => input.disabled = true);
+                });
+
+                // Bật input cho hàng đã chọn
+                const selectedRow = radio.closest('tr');
+                const inputs = selectedRow.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], select');
+                inputs.forEach(input => input.disabled = false);
+            });
+        });
+    });
+
+</script>

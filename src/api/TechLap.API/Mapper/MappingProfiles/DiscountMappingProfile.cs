@@ -9,8 +9,10 @@ namespace TechLap.API.Mapper.MappingProfiles
     {
         public DiscountMappingProfile()
         {
-            CreateMap<AddAdminDiscountRequest, Discount>().ReverseMap();
-            CreateMap<UpdateAdminDiscountRequest, Discount>().ReverseMap();
+            CreateMap<AddAdminDiscountRequest, Discount>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
+            CreateMap<UpdateAdminDiscountRequest, Discount>().ReverseMap()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
             CreateMap<DeleteAdminDiscountRequest, Discount>().ReverseMap();
             CreateMap<GetAdminDiscountRespones, Discount>().ReverseMap();
             CreateMap<ApplyUserDiscountRequest, Discount>().ReverseMap();
