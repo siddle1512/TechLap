@@ -2,19 +2,26 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Newtonsoft.Json;
 using TechLap.API;
-using TechLap.API.DTOs.Responses.OrderDTOs;
+using TechLap.API.DTOs.Requests;
+using CustomerResponse = TechLap.API.DTOs.Responses.CustomerDTOs.CustomerResponse;
+using ProductResponse = TechLap.API.DTOs.Responses.ProductDTOs.ProductResponse;
 
 namespace TechLap.Razor.Pages.Order
 {
-    public class IndexModel : PageModel
+    public class CreateModel : PageModel
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly ILogger<IndexModel> _logger;
+        private readonly ILogger<CreateModel> _logger;
         private readonly IConfiguration _configuration;
 
-        public List<OrderResponse>? Orders { get; set; }
+        [BindProperty]
+        public required OrderRequest OrderRequest { get; set; }
+        [BindProperty]
+        public List<OrderDetailRequest> OrderDetailRequest { get; set; } = new List<OrderDetailRequest>();
+        public List<ProductResponse>? Products { get; set; } = new List<ProductResponse>();
+        public List<CustomerResponse>? Customers { get; set; } = new List<CustomerResponse>();
 
-        public IndexModel(ILogger<IndexModel> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public CreateModel(ILogger<CreateModel> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
@@ -25,11 +32,12 @@ namespace TechLap.Razor.Pages.Order
         {
             if (!await IsAuthorizedAsync())
             {
-                Response.Cookies.Delete("AuthToken");  // Xoá token nếu không hợp lệ
-                return RedirectToPage("/Login/Index"); // Chuyển hướng đến trang đăng nhập
+                Response.Cookies.Delete("AuthToken");
+                return RedirectToPage("/Login/Index");
             }
 
-            Orders = await LoadDataAsync<OrderResponse>("api/orders");
+            Products = await LoadDataAsync<ProductResponse>("api/products");
+            Customers = await LoadDataAsync<CustomerResponse>("api/customers");
 
             return Page();
         }

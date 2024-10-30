@@ -69,6 +69,7 @@ namespace TechLap.API.Services.Repositories.Repositories
                 .Include(o => o.OrderDetails)
                     .ThenInclude(od => od.Product)
                 .Where(predicate)
+                .OrderByDescending(o => o.Id)
                 .ToListAsync();
 
             if (!orders.Any())
