@@ -3,9 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:local="clr-namespace:TechLap.WPF.DiscountsWindow"
         mc:Ignorable="d"
-        Title="Add Discount" Height="400" Width="400">
+        Title="Add Discount" MaxHeight="450" MaxWidth="500">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -14,6 +13,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
@@ -22,24 +22,35 @@
         </Grid.ColumnDefinitions>
 
         <!-- Label và TextBox cho Discount Code -->
-        <TextBlock Text="Discount Code:" Margin="0,0,10,0" VerticalAlignment="Center"/>
-        <TextBox x:Name="DiscountCodeTextBox" Grid.Column="1" Margin="0,0,0,10" />
+        <TextBlock Text="Discount Code:" Margin="0,5" VerticalAlignment="Center"/>
+        <TextBox x:Name="DiscountCodeTextBox" Grid.Column="1" Margin="0,5" />
 
         <!-- Label và TextBox cho Discount Percentage -->
-        <TextBlock Text="Discount Percentage (%):" Grid.Row="1" Margin="0,10,10,0" VerticalAlignment="Center"/>
-        <TextBox x:Name="DiscountPercentageTextBox" Grid.Column="1" Grid.Row="1" Margin="0,10,0,10"/>
+        <TextBlock Text="Discount Percentage (%):" Grid.Row="1" Margin="0,10" VerticalAlignment="Center"/>
+        <TextBox x:Name="DiscountPercentageTextBox" Grid.Column="1" Grid.Row="1" Margin="0,10"/>
 
-        <!-- Label và TextBox cho End Date -->
-        <TextBlock Text="End Date:" Grid.Row="3" Margin="0,10,10,0" VerticalAlignment="Center"/>
-        <DatePicker x:Name="EndDatePicker" Grid.Column="1" Grid.Row="3" Margin="0,10,0,10"/>
+        <!-- Label và DatePicker cho Start Date -->
+        <TextBlock Text="Start Date:" Grid.Row="2" Margin="0,10" VerticalAlignment="Center"/>
+        <DatePicker x:Name="StartDatePicker" Grid.Column="1" Grid.Row="2" Margin="0,10"/>
+
+        <!-- Label và DatePicker cho End Date -->
+        <TextBlock Text="End Date:" Grid.Row="3" Margin="0,10" VerticalAlignment="Center"/>
+        <DatePicker x:Name="EndDatePicker" Grid.Column="1" Grid.Row="3" Margin="0,10"/>
 
         <!-- Label và TextBox cho Usage Limit -->
-        <TextBlock Text="Usage Limit:" Grid.Row="4" Margin="0,10,10,0" VerticalAlignment="Center"/>
-        <TextBox x:Name="UsageLimitTextBox" Grid.Column="1" Grid.Row="4" Margin="0,10,0,10"/>
+        <TextBlock Text="Usage Limit:" Grid.Row="4" Margin="0,10" VerticalAlignment="Center"/>
+        <TextBox x:Name="UsageLimitTextBox" Grid.Column="1" Grid.Row="4" Margin="0,10"/>
+
+        <!-- Label và ComboBox cho Status -->
+        <TextBlock Text="Status:" Grid.Row="5" Margin="0,10" VerticalAlignment="Center"/>
+        <ComboBox x:Name="StatusComboBox" Grid.Column="1" Grid.Row="5" Margin="0,10"
+                  ItemsSource="{Binding DiscountStatusEnumValues}" 
+                  SelectedItem="{Binding SelectedDiscountStatus, Mode=TwoWay}"/>
+
 
         <!-- Nút Add để thêm discount -->
-        <Button Content="Add Discount" Grid.Row="5" Grid.ColumnSpan="2" 
-                Margin="0,20,0,0" Width="100" Click="Add_Click" 
+        <Button Content="Add Discount" Grid.Row="6" Grid.ColumnSpan="2" 
+                Margin="0,20,0,0" Height="20" Width="100" Click="Add_Click" 
                 HorizontalAlignment="Center"/>
     </Grid>
 </Window>
