@@ -11,6 +11,7 @@ namespace TechLap.Razor.Pages.Order
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<IndexModel> _logger;
         private readonly IConfiguration _configuration;
+
         public List<OrderResponse>? Orders { get; set; }
 
         public IndexModel(ILogger<IndexModel> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
@@ -28,14 +29,11 @@ namespace TechLap.Razor.Pages.Order
                 return RedirectToPage("/Login/Index"); // Chuyển hướng đến trang đăng nhập
             }
 
-            Orders = await LoadOrdersAsync();
+            Orders = await LoadDataAsync<OrderResponse>("api/orders");
 
             return Page();
         }
 
-        /// <summary>
-        /// Kiểm tra xem người dùng có quyền truy cập vào trang này không
-        /// </summary>
         private async Task<bool> IsAuthorizedAsync()
         {
             var token = Request.Cookies["AuthToken"];
@@ -70,25 +68,25 @@ namespace TechLap.Razor.Pages.Order
             return false;
         }
 
-        private async Task<List<OrderResponse>?> LoadOrdersAsync()
+        private async Task<List<T>?> LoadDataAsync<T>(string endpoint)
         {
             var token = Request.Cookies["AuthToken"];
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
             string? apiEndpoint = _configuration["ApiEndPoint"];
 
-            var response = await client.GetAsync($"{apiEndpoint}/api/orders");
+            var response = await client.GetAsync($"{apiEndpoint}/{endpoint}");
 
             if (response.IsSuccessStatusCode)
             {
                 var responseBody = await response.Content.ReadAsStringAsync();
-                var apiResponse = JsonConvert.DeserializeObject<ApiResponse<List<OrderResponse>>>(responseBody);
+                var apiResponse = JsonConvert.DeserializeObject<ApiResponse<List<T>>>(responseBody);
 
                 return apiResponse?.Data;
             }
             else
             {
-                _logger.LogError("API call failed with status code: {StatusCode}", response.StatusCode);
+                _logger.LogError("API call to {Endpoint} failed with status code: {StatusCode}", endpoint, response.StatusCode);
                 return null;
             }
         }

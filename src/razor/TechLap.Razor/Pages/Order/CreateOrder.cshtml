@@ -1,0 +1,315 @@
+﻿@page
+@model TechLap.Razor.Pages.Order.CreateModel
+@{
+    ViewData["Title"] = "Create Order";
+}
+
+<head>
+
+</head>
+
+<div class="container">
+    <div class="row">
+        <h2>Create Order</h2>
+        <form method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <!-- Left Panel -->
+            <div class="col-md-6">
+                <h5>Select Product</h5>
+                <input type="text" id="txtSearchProduct" class="form-control" placeholder="Search product..." onchange="searchProduct()" />
+                <select id="cmbProduct" class="form-select" onchange="productSelectionChanged()">
+                    <option value="">Select product</option>
+                    <!-- Product options will be populated here -->
+                    @foreach (var product in Model.Products)
+                    {
+                        <option value="@product.Id">@product.Model</option>
+                    }
+                </select>
+                <label class="mt-3">Quantity</label>
+                <input type="number" id="txtQuantity" class="form-control" onchange="quantityChanged()" />
+                <label class="mt-3">Price</label>
+                <input type="text" id="txtPrice" class="form-control" readonly disabled />
+                <button id="btnAddProduct" type="button" class="btn btn-primary mt-2" onclick="addProduct()">Add Product</button>
+                <table class="table mt-3">
+                    <thead>
+                        <tr>
+                            <th>Product ID</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dgProducts">
+                        <!-- Product rows will be populated here -->
+                        @for (int i = 0; i < Model.OrderDetailRequest.Count; i++)
+                        {
+                            <tr>
+                                <td>@Model.OrderDetailRequest[i].ProductId</td>
+                                <td>
+                                    <input type="hidden" name="OrderDetailRequest[@i].ProductId" value="@Model.OrderDetailRequest[i].ProductId" />
+                                    <input type="number" name="OrderDetailRequest[@i].Quantity" value="@Model.OrderDetailRequest[i].Quantity" />
+                                </td>
+                                <td>
+                                    <input type="text" name="OrderDetailRequest[@i].Price" value="@Model.OrderDetailRequest[i].Price" readonly />
+                                </td>
+                                <td><button type="button" class="btn btn-danger" onclick="removeProduct('@Model.OrderDetailRequest[i].ProductId')">Remove</button></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="col-md-6">
+                <h5>Select Customer</h5>
+                <input type="text" id="txtCustomer" class="form-control" placeholder="Search customer..." onchange="searchCustomer()" />
+                <select id="cmbCustomer" name="OrderRequest.CustomerId" class="form-select">
+                    <option value="">Select customer</option>
+                    @foreach (var customer in Model.Customers)
+                    {
+                        <option value="@customer.Id">@customer.Name</option>
+                    }
+                </select>
+                <label class="mt-3">Order Date</label>
+                <input asp-for="OrderRequest.OrderDate" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" id="txtOrderDate" class="form-control" readonly />
+                <label class="mt-3">Payment Method</label>
+                <select asp-for="OrderRequest.Payment" id="cmbPaymentMethod" class="form-select">
+                    @foreach (var paymentMethod in Enum.GetValues(typeof(TechLap.API.Enums.PaymentMethod)))
+                    {
+                        <option value="@paymentMethod">@paymentMethod</option>
+                    }
+                </select>
+                <label class="mt-3">Order Status</label>
+                <select asp-for="OrderRequest.Status" id="cmbOrderStatus" class="form-select">
+                    @foreach (var orderStatus in Enum.GetValues(typeof(TechLap.API.Enums.OrderStatus)))
+                    {
+                        <option value="@orderStatus">@orderStatus</option>
+                    }
+                </select>
+                <label class="mt-3">Discount Code</label>
+                <input asp-for="OrderRequest.DiscountId" type="text" id="txtDiscountCode" class="form-control" />
+                <label class="mt-3">Total Price</label>
+                <input asp-for="OrderRequest.TotalPrice" type="text" id="txtTotalPrice" class="form-control" readonly />
+                <button type="submit" id="btnSave" class="btn btn-success mt-2">Save</button>
+                <a role="button" href="/Order" id="btnCancel" class="btn btn-outline-primary mt-2">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+<script>
+    // Convert Model.Products to JSON format for JavaScript usage
+    const products = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Products));
+
+    let productsInOrder = []; // Array to store products added to the order
+
+    // Function to search for products based on input
+    function searchProduct() {
+        const searchValue = document.getElementById('txtSearchProduct').value.toLowerCase();
+        const productSelect = document.getElementById('cmbProduct');
+
+        // Filter products based on search value
+        for (let i = 0; i < productSelect.options.length; i++) {
+            const option = productSelect.options[i];
+            option.style.display = option.text.toLowerCase().includes(searchValue) ? '' : 'none';
+        }
+    }
+
+    // Function to handle product selection change
+    function productSelectionChanged() {
+        const productSelect = document.getElementById('cmbProduct');
+        const selectedProductId = productSelect.value;
+
+        // Find selected product to get the price
+        const selectedProduct = products.find(p => p.Id == selectedProductId);
+        const priceInput = document.getElementById('txtPrice');
+
+        if (selectedProduct) {
+            priceInput.value = selectedProduct.Price.toFixed(2); // Set the price based on selected product
+        } else {
+            priceInput.value = ''; // Reset price if no product is selected
+        }
+    }
+
+    // Update the quantityChanged function
+    function quantityChanged() {
+        const productTableBody = document.getElementById('dgProducts');
+        const rows = productTableBody.getElementsByTagName('tr');
+        let totalPrice = 0;
+
+        for (let row of rows) {
+            const quantity = parseFloat(row.querySelector('input[name$="].Quantity"]').value) || 0;
+            const price = parseFloat(row.querySelector('input[name$="].Price"]').value) || 0;
+            totalPrice += quantity * price;
+        }
+
+        document.getElementById('txtTotalPrice').value = totalPrice.toFixed(2);
+    }
+
+    // Function to add selected product to the order
+    function addProduct() {
+        const productSelect = document.getElementById('cmbProduct');
+        const selectedProductId = productSelect.value;
+        const quantityInput = document.getElementById('txtQuantity');
+
+        if (!selectedProductId) {
+            alert('Please select a product');
+            return;
+        }
+
+        const quantity = parseInt(quantityInput.value) || 0;
+        if (quantity <= 0) {
+            alert('Please enter a valid quantity');
+            return;
+        }
+
+        const productTableBody = document.getElementById('dgProducts');
+        let existingRow = null;
+
+        // Check if product already exists in the table
+        for (let row of productTableBody.getElementsByTagName('tr')) {
+            const productId = row.querySelector('input[name$="].ProductId"]').value;
+            if (productId === selectedProductId) {
+                existingRow = row;
+                break;
+            }
+        }
+
+        if (existingRow) {
+            // Update quantity and row total for existing product
+            const quantityInput = existingRow.querySelector('input[name$="].Quantity"]');
+            const currentQuantity = parseInt(quantityInput.value) || 0;
+            quantityInput.value = currentQuantity + quantity;
+            updateRowTotal(quantityInput);
+        } else {
+            // Create new row for the new product
+            const selectedProduct = products.find(p => p.Id == selectedProductId);
+            const currentIndex = productTableBody.children.length;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${selectedProduct.Id}</td>
+                <td>
+                    <input type="hidden" name="OrderDetailRequest[${currentIndex}].ProductId" value="${selectedProduct.Id}" />
+                    <input type="number" name="OrderDetailRequest[${currentIndex}].Quantity" value="${quantity}"
+                           onchange="updateRowTotal(this)" min="1" />
+                </td>
+                <td>
+                    <input type="hidden" name="OrderDetailRequest[${currentIndex}].Price" value="${selectedProduct.Price}" />
+                    <span>${selectedProduct.Price}</span>
+                </td>
+                <td>
+                    <span class="row-total">${(quantity * selectedProduct.Price).toFixed(2)}</span>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger" onclick="removeProduct(this)">Remove</button>
+                </td>
+            `;
+            productTableBody.appendChild(row);
+        }
+
+        // Clear inputs
+        productSelect.value = '';
+        quantityInput.value = '';
+
+        // Update total price
+        updateTotalPrice();
+    }
+
+
+    // Function to update row total when quantity changes
+    function updateRowTotal(quantityInput) {
+        const row = quantityInput.closest('tr');
+        const price = parseFloat(row.querySelector('input[name$="].Price"]').value);
+        const quantity = parseInt(quantityInput.value) || 0;
+        const totalSpan = row.querySelector('.row-total');
+        totalSpan.textContent = (price * quantity).toFixed(2);
+        updateTotalPrice();
+    }
+
+    // Updated removeProduct function
+    function removeProduct(button) {
+        const row = button.closest('tr');
+        const tbody = row.parentNode;
+        tbody.removeChild(row);
+
+        // Reindex remaining rows
+        const rows = tbody.getElementsByTagName('tr');
+        for (let i = 0; i < rows.length; i++) {
+            const inputs = rows[i].getElementsByTagName('input');
+            for (let input of inputs) {
+                const name = input.getAttribute('name');
+                if (name) {
+                    input.setAttribute('name', name.replace(/\[\d+\]/, `[${i}]`));
+                }
+            }
+        }
+
+        updateTotalPrice();
+    }
+
+    // Function to search for customers based on input
+    function searchCustomer() {
+        const searchValue = document.getElementById('txtCustomer').value.toLowerCase();
+        const customerSelect = document.getElementById('cmbCustomer');
+
+        // Filter customers based on search value
+        for (let i = 0; i < customerSelect.options.length; i++) {
+            const option = customerSelect.options[i];
+            option.style.display = option.text.toLowerCase().includes(searchValue) ? '' : 'none';
+        }
+    }
+
+
+    // Function to update total price
+    function updateTotalPrice() {
+        const rows = document.getElementById('dgProducts').getElementsByTagName('tr');
+        let total = 0;
+
+        for (let row of rows) {
+            const quantity = parseInt(row.querySelector('input[name$="].Quantity"]').value) || 0;
+            const price = parseFloat(row.querySelector('input[name$="].Price"]').value) || 0;
+            total += quantity * price;
+        }
+
+        document.getElementById('txtTotalPrice').value = total.toFixed(2);
+    }
+
+    // Form validation before submit
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const customerId = document.getElementById('cmbCustomer').value;
+        const productsTable = document.getElementById('dgProducts');
+        const totalPrice = parseFloat(document.getElementById('txtTotalPrice').value) || 0;
+
+        if (!customerId) {
+            e.preventDefault();
+            alert('Please select a customer');
+            return;
+        }
+
+        if (productsTable.children.length === 0) {
+            e.preventDefault();
+            alert('Please add at least one product');
+            return;
+        }
+
+        if (totalPrice <= 0) {
+            e.preventDefault();
+            alert('Total price must be greater than 0');
+            return;
+        }
+
+        // Validate all quantities
+        const quantities = productsTable.querySelectorAll('input[name$="].Quantity"]');
+        for (let quantityInput of quantities) {
+            const quantity = parseInt(quantityInput.value) || 0;
+            if (quantity <= 0) {
+                e.preventDefault();
+                alert('All products must have a valid quantity');
+                return;
+            }
+        }
+    });
+</script>
