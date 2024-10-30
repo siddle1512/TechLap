@@ -1,0 +1,168 @@
+﻿@page
+@model TechLap.Razor.Pages.Product.IndexModel
+@{
+    ViewData["Title"] = "Product Management";
+}
+
+<head>
+    <link href="~/css/order.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<div class="container-xl">
+    <div class="table-responsive">
+        <div class="table-wrapper">
+            <div class="table-title">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <h2>Manage <b>Orders</b></h2>
+                    </div>
+                    <div class="col-sm-6">
+                        <a href="#addProductModal" class="btn btn-success" data-toggle="modal">
+                            <i class="material-icons" style="vertical-align: middle; margin-right: 5px;">add</i>
+                            <span>Add New Order</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>
+                            <span class="custom-checkbox">
+                                <input type="checkbox" id="selectAll">
+                                <label for="selectAll"></label>
+                            </span>
+                        </th>
+                        <th>ID</th>
+                        <th>Brand</th>
+                        <th>Model</th>
+                        <th>CPU</th>
+                        <th>RAM</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Products != null && Model.Products.Any())
+                    {
+                        @foreach (var product in Model.Products)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="custom-checkbox">
+                                        <input type="checkbox" id="checkbox{@product.Id}" name="options[]" value="{@product.Id}">
+                                        <label for="checkbox{@product.Id}"></label>
+                                    </span>
+                                </td>
+                                <td>@product.Id</td>
+                                <td>@product.Brand</td>
+                                <td>@product.Model</td>
+                                <td>@product.Cpu</td>
+                                <td>@product.Ram</td>
+                                <td>@product.Price.ToString("C")</td>
+                                <td>@product.Stock</td>
+                                <td>
+                                    <a asp-page="./Edit" asp-route-id="@product.Id">
+                                        <i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i>
+                                    </a>
+                                    <a onclick="return confirm
+                                        ('Are you sure you want to delete this item?');"
+                                       asp-page-handler="Delete" asp-route-id="@product.Id">
+                                        <i class="material-icons" data-toggle="tooltip" title="Delete">&#xE872;</i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" style="text-align:center;">There are no orders to display</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="clearfix">
+                <div class="hint-text" id="pagination-info"></div>
+                <ul class="pagination justify-content-center"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div id="addProductModal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-page-handler="OnPost" method="post">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add New Product</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Brand</label>
+                        <input type="text" class="form-control" name="Brand" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Model</label>
+                        <input type="text" class="form-control" name="Model" required>
+                    </div>
+                    <div class="form-group">
+                        <label>CPU</label>
+                        <input type="text" class="form-control" name="Cpu">
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select class="form-control" name="CategoryId" required>
+                            <option value="">Select a Category</option>
+                            @foreach (var category in Model.Categories)
+                            {
+                                <option value="@category.Id">@category.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>RAM</label>
+                        <input type="text" class="form-control" name="Ram">
+                    </div>
+                    <div class="form-group">
+                        <label>VGA</label>
+                        <input type="text" class="form-control" name="Vga">
+                    </div>
+                    <div class="form-group">
+                        <label>Screen Size</label>
+                        <input type="text" class="form-control" name="ScreenSize">
+                    </div>
+                    <div class="form-group">
+                        <label>Hard Disk</label>
+                        <input type="text" class="form-control" name="HardDisk">
+                    </div>
+                    <div class="form-group">
+                        <label>OS</label>
+                        <input type="text" class="form-control" name="Os">
+                    </div>
+                    <div class="form-group">
+                        <label>Price</label>
+                        <input type="number" class="form-control" name="Price" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <input type="text" class="form-control" name="Amount" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Image URL</label>
+                        <input type="text" class="form-control" name="Image">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <input type="submit" class="btn btn-success" value="Add" />
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+

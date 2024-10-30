@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -19,15 +19,29 @@
 
 <body>
     <header id="header">
+        <!--header-->
+        <div class="header_top">
+            <!--header_top-->
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-6">
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="social-icons pull-right">
+                            <ul class="nav navbar-nav">
+                                <li><a href="#"><i class="fa fa-facebook"></i></a></li>
+                                <li><a href="#"><i class="fa fa-twitter"></i></a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div><!--/header_top-->
+
         <div class="header-middle">
             <!--header-middle-->
             <div class="container">
                 <div class="row">
-                    <div class="col-sm-4">
-                        <div class="logo pull-left">
-                            <a href="/"><img src="~/images/logo.png" alt="Logo" /></a>
-                        </div>
-                    </div>
                     <div class="col-sm-8">
                         <div class="shop-menu pull-right">
                             <ul class="nav navbar-nav">
@@ -52,17 +66,12 @@
                 <div class="row">
                     <div class="col-sm-9">
                         <div class="mainmenu pull-left">
-                            <ul class="nav navbar-nav">
-                                <li><a href="/" class="active">Home</a></li>
-                                <li><a href="/LaptopManagement">Manage Laptops</a></li>
-                                <li><a href="/OrderHistory">Order & History</a></li>
-                                <li><a href="/PromotionManagement">Manage Promotions</a></li>
-                                <li><a href="/Chat">Group Chat</a></li>
+                            <ul class="nav navbar-nav" id="navbar">
+                                <li><a href="/Product" class="nav-link">Manage Laptops</a></li>
+                                <li><a href="/Order" class="nav-link">Manage Order</a></li>
+                                <li><a href="/Discount" class="nav-link">Manage Promotions</a></li>
+                                <li><a href="/Chat" class="nav-link">Group Chat</a></li>
                             </ul>
-                        </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <div class="search_box pull-right">
                         </div>
                     </div>
                 </div>
@@ -96,6 +105,19 @@
     <script src="~/js/bootstrap.min.js"></script>
     <script src="~/js/main.js"></script>
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+
+    <!--Highlight the current menu item-->
+    <script>
+        const currentLocation = window.location.pathname;
+
+        const menuItems = document.querySelectorAll('#navbar .nav-link');
+
+        menuItems.forEach(item => {
+            if (item.getAttribute('href') === currentLocation) {
+                item.classList.add('active');
+            }
+        });
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

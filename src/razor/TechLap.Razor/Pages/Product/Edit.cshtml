@@ -1,0 +1,69 @@
+﻿@page
+@model TechLap.Razor.Pages.Product.EditModel
+@{
+}
+
+<form method="post" asp-page-handler="Edit">
+    <div class="modal-body">
+        <input type="hidden" asp-for="Product.Id" />
+        <div class="form-group">
+            <label>Brand</label>
+            <input type="text" class="form-control" asp-for="Product.Brand" />
+        </div>
+        <div class="form-group">
+            <label>Model</label>
+            <input type="text" class="form-control" asp-for="Product.Model" />
+        </div>
+        <div class="form-group">
+            <label>CPU</label>
+            <input type="text" class="form-control" asp-for="Product.Cpu" />
+        </div>
+        <div class="form-group">
+            <label>RAM</label>
+            <input type="text" class="form-control" asp-for="Product.Ram" />
+        </div>
+        <div class="form-group">
+            <label>VGA</label>
+            <input type="text" class="form-control" asp-for="Product.Vga" />
+        </div>
+        <div class="form-group">
+            <label>Screen Size</label>
+            <input type="text" class="form-control" asp-for="Product.ScreenSize" />
+        </div>
+        <div class="form-group">
+            <label>Hard Disk</label>
+            <input type="text" class="form-control" asp-for="Product.HardDisk" />
+        </div>
+        <div class="form-group">
+            <label>OS</label>
+            <input type="text" class="form-control" asp-for="Product.Os" />
+        </div>
+        <div class="form-group">
+            <label>Price</label>
+            <input type="number" class="form-control" asp-for="Product.Price" step="0.01" />
+        </div>
+        <div class="form-group">
+            <label>Stock</label>
+            <input type="text" class="form-control" asp-for="Product.Stock" />
+        </div>
+        <div class="form-group">
+            <label>Image</label>
+            <input type="text" class="form-control" asp-for="Product.Image" />
+        </div>
+        <div class="form-group">
+            <label>Category</label>
+            <select class="form-control" asp-for="Product.CategoryId">
+                <option value="">Select Category</option>
+                @foreach (var category in Model.Categories)
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-info">Save</button>
+    </div>
+</form>
+
