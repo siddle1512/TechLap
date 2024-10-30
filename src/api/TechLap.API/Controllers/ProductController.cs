@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Azure;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using TechLap.API.DTOs.Requests;
@@ -20,6 +21,16 @@ namespace TechLap.API.Controllers
         public ProductController(IProductRepository productRepository)
         {
             _productRepository = productRepository;
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "User, Admin")]
+        [Route("/api/products/{id:int}")]
+        public async Task<IActionResult> GetProductById(int id)
+        {
+            var product = await _productRepository.GetByIdAsync(id);
+            var response = LazyMapper.Mapper.Map<ProductResponse>(product);
+            return CreateResponse<ProductResponse>(true, "Request processed successfully.", HttpStatusCode.OK, response);
         }
 
         [HttpGet]
