@@ -25,8 +25,8 @@ namespace TechLap.Razor.Pages.Order
         {
             if (!await IsAuthorizedAsync())
             {
-                Response.Cookies.Delete("AuthToken");  // Xoá token nếu không hợp lệ
-                return RedirectToPage("/Login/Index"); // Chuyển hướng đến trang đăng nhập
+                Response.Cookies.Delete("AuthToken");
+                return RedirectToPage("/Login/Index");
             }
 
             Orders = await LoadDataAsync<OrderResponse>("api/orders");

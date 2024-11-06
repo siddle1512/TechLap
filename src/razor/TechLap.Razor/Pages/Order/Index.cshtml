@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 
-<div class="container-xl">
+<div class="container-xl pageorder">
     <div class="table-responsive">
         <div class="table-wrapper">
             <div class="table-title">
@@ -60,7 +60,7 @@
                                 <td>@order.TotalPrice</td>
                                 <td>@order.OrderDate.ToString("yyyy-MM-dd")</td>
                                 <td>
-                                    <a href="/Order/EditOrder" class="edit" data-toggle="modal">
+                                    <a href="/Order/UpdateOrder/@order.Id" class="edit" data-toggle="modal">
                                         <i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i>
                                     </a>
                                 </td>
