@@ -16,10 +16,13 @@ namespace TechLap.WPF.DiscountsWindow
         {
             InitializeComponent();
             DataContext = this; // Đặt DataContext cho liên kết
+            DiscountStatusEnumValue = new ObservableCollection<DiscountStatus>(
+                Enum.GetValues(typeof(DiscountStatus)).Cast<DiscountStatus>());
         }
 
 
         public DiscountStatus SelectedDiscountStatus { get; set; } // Thêm thuộc tính để giữ giá trị đã chọn
+        public ObservableCollection<DiscountStatus> DiscountStatusEnumValue { get; set; }
 
         private async void Add_Click(object sender, RoutedEventArgs e)
         {

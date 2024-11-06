@@ -64,43 +64,49 @@
                                     <label for="radio@discounts.Id"></label>
                                 </span>
                             </td>
-                            <td>@discounts.Id</td>
-                            <td>
-                                <input type="text" class="form-control" value="@discounts.DiscountCode" disabled/>
-                            </td>
-                            <td>
-                                <input type="number" class="form-control" value="@discounts.DiscountPercentage" disabled/>
-                            </td>
-                            <td>
-                                <input type="date" class="form-control" value="@discounts.StartDate.ToString("yyyy-MM-dd")" disabled/>
-                            </td>
-                            <td>
-                                <input type="date" class="form-control" value="@discounts.EndDate.ToString("yyyy-MM-dd")" disabled/>
-                            </td>
-                            <td>
-                                <input type="number" class="form-control" value="@discounts.TimesUsed" disabled/>
-                            </td>
-                            <td>
-                                <input type="number" class="form-control" value="@discounts.UsageLimit" disabled/>
-                            </td>
-                            <td>
-                                <input type="date" class="form-control" value="@discounts.CreatedDate.ToString("yyyy-MM-dd")" disabled/>
-                            </td>
-                            <td>
-                                <input type="date" class="form-control" value="@discounts.LastModifiedDate.ToString("yyyy-MM-dd")" disabled/>
-                            </td>
-                            <td>
-                                <select class="form-control" asp-for="@discounts.Status" asp-items="Html.GetEnumSelectList<DiscountStatus>()" disabled>
-                                </select>
-                            </td>
-                            <td class="action-buttons">
-                                <a asp-page-handler="EditDiscount" asp-route-id="@discounts.Id" class="edit" data-toggle="modal">
-                                    <i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i>
-                                </a>
-                                <a asp-page-handler="DeleteDiscount" asp-route-id="@discounts.Id" class="delete" data-toggle="modal">
-                                    <i class="material-icons" data-toggle="tooltip" title="Delete">&#xE872;</i>
-                                </a>
-                            </td>
+                            <form asp-page-handler="EditDiscount" asp-route-id="@discounts.Id" method="post" onsubmit="return validateUpdateForm()">
+
+                                <td>@discounts.Id</td>
+                                <td>
+                                    <input type="text" class="form-control" value="@discounts.DiscountCode" asp-for="UpdateDiscount.DiscountCode" disabled/>
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control" value="@discounts.DiscountPercentage" asp-for="UpdateDiscount.DiscountPercentage" disabled/>
+                                </td>
+                                <td>
+                                    <input type="date" class="form-control" value="@discounts.StartDate.ToString("yyyy-MM-dd")" asp-for="UpdateDiscount.StartDate" disabled/>
+                                </td>
+                                <td>
+                                    <input type="date" class="form-control" value="@discounts.EndDate.ToString("yyyy-MM-dd")" asp-for="UpdateDiscount.EndDate" disabled/>
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control" value="@discounts.TimesUsed" readonly disabled/>
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control" value="@discounts.UsageLimit" asp-for="UpdateDiscount.UsageLimit" disabled/>
+                                </td>
+                                <td>
+                                    <input type="date" class="form-control" value="@discounts.CreatedDate.ToString("yyyy-MM-dd")" readonly disabled/>
+                                </td>
+                                <td>
+                                    <input type="date" class="form-control" value="@discounts.LastModifiedDate.ToString("yyyy-MM-dd")"readonly disabled/>
+                                </td>
+                                <td>
+                                    <select class="form-control" value="@discounts.Status" asp-for="UpdateDiscount.Status" asp-items="Html.GetEnumSelectList<DiscountStatus>()" disabled>
+                                    </select>
+                                </td>
+                                <td class="action-buttons">
+                                    <button type="submit" class="edit" title="Edit">
+                                        <span class="material-icons">&#xE254;</span>
+                                    </button>
+                                    <form asp-page-handler="DeleteDiscount" asp-route-id="@discounts.Id" methods="post" onsubmit="return confirmDelete()">
+                                        <button type="submit" class="delete" title="Delete">
+                                            <span class="material-icons">&#xE872;</span>
+                                        </button>
+                                    </form>
+                                </td>
+
+                            </form>
                         </tr>
                     }
                 }
@@ -151,7 +157,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Usage Limit</label>
-                                    <input type="text" class="form-control" asp-for="NewDiscount.UsageLimit" placeholder="Ex: 20" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required/>
+                                    <input type="number" class="form-control" asp-for="NewDiscount.UsageLimit" placeholder="Ex: 20" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required/>
                                 </div>
                                 <div class="form-group">
                                     <label for="status">Status</label>
@@ -171,54 +177,6 @@
     </div>
 </div>
 
-<!-- Edit Modal HTML -->
-@* <div id="editOrderModal" class="modal fade"> *@
-@*     <div class="modal-dialog"> *@
-@*         <div class="modal-content"> *@
-@*             <form method="post" asp-page-handler="EditDiscount"> *@
-@*                 <div class="modal-header"> *@
-@*                     <h4 class="modal-title">Edit Promotion</h4> *@
-@*                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> *@
-@*                 </div> *@
-@*                 <div class="modal-body"> *@
-@*                     <!-- Form fields for Discount details --> *@
-@*                     <div class="form-group"> *@
-@*                         <label>Discount Code</label> *@
-@*                         <input type="text" class="form-control" asp-for="UpdateDiscount.DiscountCode" required> *@
-@*                     </div> *@
-@*                     <div class="form-group"> *@
-@*                         <label>Discount Percentage</label> *@
-@*                         <input type="number" step="0.01" class="form-control" asp-for="UpdateDiscount.DiscountPercentage" required> *@
-@*                     </div> *@
-@*                     <div class="form-group"> *@
-@*                         <label>Start Date</label> *@
-@*                         <input type="datetime-local" class="form-control" asp-for="UpdateDiscount.StartDate" required> *@
-@*                     </div> *@
-@*                     <div class="form-group"> *@
-@*                         <label>End Date</label> *@
-@*                         <input type="datetime-local" class="form-control" asp-for="UpdateDiscount.EndDate" required> *@
-@*                     </div> *@
-@*                     <div class="form-group"> *@
-@*                         <label>Usage Limit</label> *@
-@*                         <input type="number" class="form-control" asp-for="UpdateDiscount.UsageLimit" required> *@
-@*                     </div> *@
-@*                     <div class="form-group"> *@
-@*                         <label>Status</label> *@
-@*                         <select class="form-control" asp-for="UpdateDiscount.Status"> *@
-@*                             <option value="true">Active</option> *@
-@*                             <option value="false">Inactive</option> *@
-@*                         </select> *@
-@*                     </div> *@
-@*                     <input type="hidden" asp-for="UpdateDiscount.Id"/> *@
-@*                 </div> *@
-@*                 <div class="modal-footer"> *@
-@*                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button> *@
-@*                     <input type="submit" class="btn btn-success" value="Save"> *@
-@*                 </div> *@
-@*             </form> *@
-@*         </div> *@
-@*     </div> *@
-@* </div> *@
 
 <!-- Delete Modal HTML -->
 <div id="deleteOrderModal" class="modal fade">
@@ -242,6 +200,25 @@
     </div>
 </div>
 
+<!-- Validation Error Modal -->
+<div class="modal fade" id="validationErrorModal" tabindex="-1" role="dialog" aria-labelledby="validationErrorModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="validationErrorModalLabel">Validation Errors</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="validationErrorMessages">
+                <!-- Error messages will be inserted here by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
    
     
@@ -353,5 +330,10 @@
             });
         });
     });
+    function confirmDelete() {
+        return confirm("Are you sure you want to delete this discount?");
+    }
+    
+  
 
 </script>

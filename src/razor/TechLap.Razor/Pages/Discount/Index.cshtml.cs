@@ -123,31 +123,6 @@ public class IndexModel : PageModel
             Discounts = await LoadDiscountAsync();
             return Page();
         }
-
-        // Kiểm tra điều kiện của Discount Code
-        if (NewDiscount.DiscountCode.Length < 4)
-        {
-           throw new Exception("Discount code phải có ít nhất 4 ký tự.");
-        }
-        
-        // Kiểm tra điều kiện của Discount Percentage
-        if (NewDiscount.DiscountPercentage < 1 || NewDiscount.DiscountPercentage > 100)
-        {
-            throw new Exception("Discount percentage phải trong khoảng từ 1 đến 100%.");
-        }
-        
-        // Kiểm tra điều kiện của Start Date và End Date
-        if (NewDiscount.StartDate < DateTime.Today)
-        {
-            throw new Exception("Start Date phải là ngày hôm nay hoặc sau đó.");
-        }
-        
-        if (NewDiscount.StartDate >= NewDiscount.EndDate)
-        {
-            throw new Exception("End Date phải lớn hơn Start Date.");
-        }
-        
-        // Nếu có lỗi, lưu vào TempData và hiển thị dialog lỗi
         
 
         var token = Request.Cookies["AuthToken"];
@@ -183,47 +158,49 @@ public class IndexModel : PageModel
     }
 
     public async Task<IActionResult> OnPostEditDiscountAsync(int id)
+{
+    if (!await IsAuthorizedAsync())
     {
-        if (!await IsAuthorizedAsync())
-        {
-            return RedirectToPage("/Login/Index");
-        }
-
-        var token = Request.Cookies["AuthToken"];
-        var client = _httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-        string? apiEndpoint = _configuration["ApiEndPoint"];
-
-        // Chuyển đối tượng cập nhật thành JSON
-        var updateDiscountRequest = new UpdateAdminDiscountRequest(
-            UpdateDiscount.DiscountCode,
-            UpdateDiscount.DiscountPercentage,
-            UpdateDiscount.StartDate,
-            UpdateDiscount.EndDate,
-            UpdateDiscount.UsageLimit,
-            UpdateDiscount.Status
-        );
-        var content = new StringContent(JsonConvert.SerializeObject(updateDiscountRequest), Encoding.UTF8,
-            "application/json");
-
-        // Gọi PUT API với dữ liệu cập nhật
-        var response = await client.PutAsync($"{apiEndpoint}/api/discounts/{id}", content);
-
-        if (response.IsSuccessStatusCode)
-        {
-            _logger.LogInformation("Discount updated successfully.");
-            TempData["SuccessMessage"] = "Discount updated successfully!";
-            return RedirectToPage();
-        }
-        else
-        {
-            _logger.LogError("Failed to update discount with status code: {StatusCode}", response.StatusCode);
-            TempData["ErrorMessages"] = new List<string> { "Error updating discount." };
-        }
-
-        Discounts = await LoadDiscountAsync();
-        return Page();
+        return RedirectToPage("/Login/Index");
     }
+
+    var token = Request.Cookies["AuthToken"];
+    var client = _httpClientFactory.CreateClient();
+    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+    string? apiEndpoint = _configuration["ApiEndPoint"];
+
+    var updateDiscount = new UpdateAdminDiscountRequest(
+        UpdateDiscount.DiscountCode,
+        UpdateDiscount.DiscountPercentage,
+        UpdateDiscount.StartDate,
+        UpdateDiscount.EndDate,
+        UpdateDiscount.UsageLimit,
+        UpdateDiscount.Status
+    );
+
+    var jsonContent = JsonConvert.SerializeObject(updateDiscount);
+    var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+    var response = await client.PutAsync($"{apiEndpoint}/api/discounts/{id}", content);
+
+    if (response.IsSuccessStatusCode)
+    {
+        _logger.LogInformation("Discount updated successfully.");
+        TempData["SuccessMessage"] = "Discount updated successfully!";
+        return RedirectToPage();
+    }
+    else
+    {
+        var errorContent = await response.Content.ReadAsStringAsync();
+        _logger.LogError("Failed to update discount with status code: {StatusCode}, Error: {ErrorContent}", response.StatusCode, errorContent);
+        TempData["ErrorMessages"] = new List<string> { "Error updating discount." };
+    }
+
+    Discounts = await LoadDiscountAsync();
+    return Page();
+}
+
+
 
 
     public async Task<IActionResult> OnPostDeleteDiscountAsync(int id)
@@ -238,7 +215,7 @@ public class IndexModel : PageModel
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
         string? apiEndpoint = _configuration["ApiEndPoint"];
 
-        var response = await client.DeleteAsync($"{apiEndpoint}/api/discounts/delete");
+        var response = await client.DeleteAsync($"{apiEndpoint}/api/discounts/{id}");
 
         if (response.IsSuccessStatusCode)
         {
