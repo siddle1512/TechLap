@@ -25,7 +25,7 @@
                     </div>
                 </div>
             </div>
-            <table class="table table-striped table-hover">
+            <table class="table table-striped table-hover" id="table1">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -74,7 +74,7 @@
                     }
                 </tbody>
             </table>
-            <div class="clearfix">
+            <div class="clearfix" id="table1">
                 <div class="hint-text" id="pagination-info"></div>
                 <ul class="pagination justify-content-center"></ul>
             </div>
@@ -155,4 +155,63 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Phân trang
+    const rowsPerPage = 5;
+    let currentPage = {};
+
+    function displayPage(page, tableId) {
+        const tableRows = document.querySelectorAll(`#${tableId} tbody tr`);
+        const totalPages = Math.ceil(tableRows.length / rowsPerPage);
+
+        if (page < 1 || page > totalPages) return;
+
+        currentPage[tableId] = page;
+        const startIndex = (page - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
+
+        tableRows.forEach((row, index) => {
+            row.style.display = (index >= startIndex && index < endIndex) ? "table-row" : "none";
+        });
+
+        updatePagination(tableId, totalPages);
+        document.getElementById(`pagination-info-${tableId}`).innerText = `Page ${currentPage[tableId]} of ${totalPages}`;
+    }
+
+    function updatePagination(tableId, totalPages) {
+        const pagination = document.querySelector(`#${tableId} .pagination`);
+        pagination.innerHTML = `
+                        <li class="page-item ${currentPage[tableId] === 1 ? "disabled" : ""}">
+                            <a class="page-link" href="#" onclick="displayPage(currentPage['${tableId}'] - 1, '${tableId}')">Previous</a>
+                        </li>
+                    `;
+
+        for (let i = 1; i <= totalPages; i++) {
+            pagination.innerHTML += `
+                            <li class="page-item ${currentPage[tableId] === i ? "active" : ""}">
+                                <a class="page-link" href="#" onclick="displayPage(${i}, '${tableId}')">${i}</a>
+                            </li>
+                        `;
+        }
+
+        pagination.innerHTML += `
+                        <li class="page-item ${currentPage[tableId] === totalPages ? "disabled" : ""}">
+                            <a class="page-link" href="#" onclick="displayPage(currentPage['${tableId}'] + 1, '${tableId}')">Next</a>
+                        </li>
+                    `;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const tables = document.querySelectorAll("table");
+
+        tables.forEach(table => {
+            const tableId = table.getAttribute("id");
+            if (!tableId) return;
+
+            currentPage[tableId] = 1;
+            displayPage(1, tableId);
+        });
+    });
+</script>
 
