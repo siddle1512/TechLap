@@ -115,16 +115,6 @@ public class IndexModel : PageModel
             return RedirectToPage("/Login/Index");
         }
 
-        
-        var errorMessages = new List<string>();
-        if (errorMessages.Any())
-        {
-            TempData["ErrorMessages"] = errorMessages;
-            Discounts = await LoadDiscountAsync();
-            return Page();
-        }
-        
-
         var token = Request.Cookies["AuthToken"];
         var client = _httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");

@@ -64,26 +64,26 @@
                                     <label for="radio@discounts.Id"></label>
                                 </span>
                             </td>
-                            <form asp-page-handler="EditDiscount" asp-route-id="@discounts.Id" method="post" onsubmit="return validateUpdateForm()">
+                            <form asp-page-handler="EditDiscount" asp-route-id="@discounts.Id" method="post">
 
                                 <td>@discounts.Id</td>
                                 <td>
-                                    <input type="text" class="form-control" value="@discounts.DiscountCode" asp-for="UpdateDiscount.DiscountCode" disabled/>
+                                    <input type="text" id="discountCode" class="form-control" value="@discounts.DiscountCode" asp-for="UpdateDiscount.DiscountCode" disabled/>
                                 </td>
                                 <td>
-                                    <input type="number" class="form-control" value="@discounts.DiscountPercentage" asp-for="UpdateDiscount.DiscountPercentage" disabled/>
+                                    <input type="number" id="discountPercentage" class="form-control" value="@discounts.DiscountPercentage" asp-for="UpdateDiscount.DiscountPercentage" disabled/>
                                 </td>
                                 <td>
-                                    <input type="date" class="form-control" value="@discounts.StartDate.ToString("yyyy-MM-dd")" asp-for="UpdateDiscount.StartDate" disabled/>
+                                    <input type="date" id="startDate" class="form-control" value="@discounts.StartDate.ToString("yyyy-MM-dd")" asp-for="UpdateDiscount.StartDate" disabled/>
                                 </td>
                                 <td>
-                                    <input type="date" class="form-control" value="@discounts.EndDate.ToString("yyyy-MM-dd")" asp-for="UpdateDiscount.EndDate" disabled/>
+                                    <input type="date" id="endDate" class="form-control" value="@discounts.EndDate.ToString("yyyy-MM-dd")" asp-for="UpdateDiscount.EndDate" disabled/>
                                 </td>
                                 <td>
                                     <input type="number" class="form-control" value="@discounts.TimesUsed" readonly disabled/>
                                 </td>
                                 <td>
-                                    <input type="number" class="form-control" value="@discounts.UsageLimit" asp-for="UpdateDiscount.UsageLimit" disabled/>
+                                    <input type="number" id="usageLimit" class="form-control" value="@discounts.UsageLimit" asp-for="UpdateDiscount.UsageLimit" disabled/>
                                 </td>
                                 <td>
                                     <input type="date" class="form-control" value="@discounts.CreatedDate.ToString("yyyy-MM-dd")" readonly disabled/>
@@ -92,21 +92,27 @@
                                     <input type="date" class="form-control" value="@discounts.LastModifiedDate.ToString("yyyy-MM-dd")"readonly disabled/>
                                 </td>
                                 <td>
-                                    <select class="form-control" value="@discounts.Status" asp-for="UpdateDiscount.Status" asp-items="Html.GetEnumSelectList<DiscountStatus>()" disabled>
+                                    <select id="status" class="form-control"  asp-for="UpdateDiscount.Status" asp-items="Html.GetEnumSelectList<DiscountStatus>()"  disabled>
+                                        <option value="@discounts.Status" >@discounts.Status</option>
                                     </select>
                                 </td>
                                 <td class="action-buttons">
-                                    <button type="submit" class="edit" title="Edit">
-                                        <span class="material-icons">&#xE254;</span>
+                                    <button style="border: none; background-color: #fcfcfc; color: #4f5050" type="submit" class="edit" title="Edit">
+                                        <i class="material-icons">&#xE254;</i>
                                     </button>
-                                    <form asp-page-handler="DeleteDiscount" asp-route-id="@discounts.Id" methods="post" onsubmit="return confirmDelete()">
-                                        <button type="submit" class="delete" title="Delete">
-                                            <span class="material-icons">&#xE872;</span>
-                                        </button>
-                                    </form>
                                 </td>
-
                             </form>
+                            <td>
+                                <form onclick="return confirm
+                                        ('Are you sure you want to delete this item?');"
+                                    asp-page-handler="DeleteDiscount" asp-route-id="@discounts.Id" methods="post">
+                                    <button style="border: none; background-color: #fcfcfc; color: #4f5050" type="submit" class="delete" title="Delete">
+                                        <span class="material-icons">&#xE872;</span>
+                                    </button>
+                                </form>
+                            </td>
+
+
                         </tr>
                     }
                 }
@@ -161,7 +167,11 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="status">Status</label>
-                                    <select class="form-control" asp-for="NewDiscount.Status" asp-items="Html.GetEnumSelectList<DiscountStatus>()">
+                                    <select class="form-control" asp-for="NewDiscount.Status" >
+                                        @foreach (var discountStatus in Enum.GetValues(typeof(TechLap.API.Enums.DiscountStatus)))
+                                        {
+                                        <option value="@discountStatus">@discountStatus</option>
+                                        }
                                     </select>
                                 </div>
                             </div>
@@ -169,8 +179,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <input type="submit" class="btn btn-success" value="Submit"/>
+                    <button type="submit" class="btn btn-success">Submit</button>
                 </div>
             </form>
         </div>
@@ -178,47 +187,7 @@
 </div>
 
 
-<!-- Delete Modal HTML -->
-<div id="deleteOrderModal" class="modal fade">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="post" asp-page-handler="DeleteDiscount">
-                <div class="modal-header">
-                    <h4 class="modal-title">Delete Promotion</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete this Promotion?</p>
-                    <input type="hidden"/>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <input type="submit" class="btn btn-danger" value="Delete">
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
-<!-- Validation Error Modal -->
-<div class="modal fade" id="validationErrorModal" tabindex="-1" role="dialog" aria-labelledby="validationErrorModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="validationErrorModalLabel">Validation Errors</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body" id="validationErrorMessages">
-                <!-- Error messages will be inserted here by JavaScript -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
 <script>
    
     
@@ -330,9 +299,54 @@
             });
         });
     });
-    function confirmDelete() {
-        return confirm("Are you sure you want to delete this discount?");
-    }
+  
+
+
+
+
+    // Form validation Update
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const discountCode = document.getElementById('discountCode').value;
+        const discountPercentage = document.getElementById('discountPercentage').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const usageLimit = document.getElementById('usageLimit').value;
+        const currentDate = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+
+        if (!discountCode) {
+            e.preventDefault();
+            alert('Please Enter Discount Code Again');
+            return;
+        }
+
+        if (!discountPercentage || discountPercentage <= 0 || discountPercentage > 100) {
+            e.preventDefault();
+            alert('Please Enter Discount Percentage range from 1 to 100');
+            return;
+        }
+         
+         
+        if (!startDate) {
+            e.preventDefault();
+            alert('Please Enter Start Date Again');
+            return;
+        }
+
+        if (!endDate || endDate < startDate || endDate < currentDate) {
+            e.preventDefault();
+            alert('Please Enter End Date Again');
+            return;
+        }
+        
+        if (!usageLimit || usageLimit <= 0) {
+            e.preventDefault();
+            alert('Please Enter Usage Limit Again');
+         
+        }
+    });
+
+
+
     
   
 
