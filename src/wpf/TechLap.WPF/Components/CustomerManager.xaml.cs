@@ -1,43 +1,37 @@
 ﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
 namespace TechLap.WPF
 {
-    /// <summary>
-    /// Interaction logic for CustomerManager.xaml
-    /// </summary>
     public partial class CustomerManager : UserControl
     {
         private readonly HttpClient _httpClient;
+        private CustomerResponse _currentCustomer;
 
         public CustomerManager()
         {
             InitializeComponent();
 
-            // Initialize HttpClient and set base address
             _httpClient = new HttpClient
             {
                 BaseAddress = new Uri(ConfigurationManager.AppSettings["ApiEndpoint"] ?? throw new ArgumentNullException(nameof(ConfigurationManager)))
             };
-
-            // Set the authorization header with the token from GlobalState
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", GlobalState.Token);
         }
 
-        // Event handler for "Load Customers" button click
         private async void LoadCustomers_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // Call the API to get customers
                 var customers = await GetCustomersAsync();
-
-                // Populate the ListBox with customer data
                 CustomerDataGrid.ItemsSource = customers;
             }
             catch (Exception ex)
@@ -46,15 +40,13 @@ namespace TechLap.WPF
             }
         }
 
-        // Method to call the API and get customers
         private async Task<List<CustomerResponse>> GetCustomersAsync()
         {
-            var response = await _httpClient.GetAsync("api/customers"); // Adjust the endpoint as necessary
-
+            var response = await _httpClient.GetAsync("api/customers");
             if (response.IsSuccessStatusCode)
             {
                 var jsonResponse = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<ApiResponse>(jsonResponse).Data.ToList();
+                return JsonConvert.DeserializeObject<ApiResponse>(jsonResponse).Data;
             }
             else
             {
@@ -64,18 +56,16 @@ namespace TechLap.WPF
 
         private void AddCustomer_Click(object sender, RoutedEventArgs e)
         {
-            CustomerForm.Visibility = Visibility.Visible;
-            CustomerForm.LoadCustomer(new CustomerResponse());
-            CustomerForm.CustomerSaved += OnCustomerFormSaved;
+            _currentCustomer = new CustomerResponse();
+            ShowCustomerForm();
         }
 
         private void UpdateCustomer_Click(object sender, RoutedEventArgs e)
         {
             if (CustomerDataGrid.SelectedItem is CustomerResponse selectedCustomer)
             {
-                CustomerForm.Visibility = Visibility.Visible;
-                CustomerForm.LoadCustomer(selectedCustomer); // Load selected customer for editing
-                CustomerForm.CustomerSaved += OnCustomerFormSaved; // Subscribe to event
+                _currentCustomer = selectedCustomer;
+                ShowCustomerForm();
             }
             else
             {
@@ -83,37 +73,40 @@ namespace TechLap.WPF
             }
         }
 
-        public async void OnCustomerFormSaved(CustomerResponse customer)
+        private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
+            if (string.IsNullOrWhiteSpace(NameTextBox.Text) ||
+                string.IsNullOrWhiteSpace(EmailTextBox.Text) ||
+                string.IsNullOrWhiteSpace(PhoneNumberTextBox.Text))
+            {
+                MessageBox.Show("All fields are required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            _currentCustomer.Name = NameTextBox.Text;
+            _currentCustomer.Email = EmailTextBox.Text;
+            _currentCustomer.PhoneNumber = PhoneNumberTextBox.Text;
+
             try
             {
-                if (customer.Id == 0)
+                HttpResponseMessage response;
+                if (_currentCustomer.Id == 0)
                 {
-                    // Add new customer
-                    var response = await _httpClient.PostAsJsonAsync("api/customers", customer);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        MessageBox.Show("Customer added successfully.");
-                        LoadCustomers_Click(null, null); // Refresh the customer list
-                    }
-                    else
-                    {
-                        MessageBox.Show($"Failed to add customer. Status code: {response.StatusCode}");
-                    }
+                    response = await _httpClient.PostAsJsonAsync("api/customers", _currentCustomer);
                 }
                 else
                 {
-                    // Update existing customer
-                    var response = await _httpClient.PutAsJsonAsync($"api/customers/{customer.Id}", customer);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        MessageBox.Show("Customer updated successfully.");
-                        LoadCustomers_Click(null, null); // Refresh the customer list
-                    }
-                    else
-                    {
-                        MessageBox.Show($"Failed to update customer. Status code: {response.StatusCode}");
-                    }
+                    response = await _httpClient.PutAsJsonAsync($"api/customers/{_currentCustomer.Id}", _currentCustomer);
+                }
+
+                if (response.IsSuccessStatusCode)
+                {
+                    MessageBox.Show(_currentCustomer.Id == 0 ? "Customer added successfully." : "Customer updated successfully.");
+                    LoadCustomers_Click(null, null);
+                }
+                else
+                {
+                    MessageBox.Show($"Failed to save customer. Status code: {response.StatusCode}");
                 }
             }
             catch (Exception ex)
@@ -122,8 +115,7 @@ namespace TechLap.WPF
             }
             finally
             {
-                CustomerForm.Visibility = Visibility.Collapsed; // Hide the form
-                CustomerForm.CustomerSaved -= OnCustomerFormSaved; // Unsubscribe from the event
+                HideCustomerForm();
             }
         }
 
@@ -134,7 +126,7 @@ namespace TechLap.WPF
                 var response = await _httpClient.DeleteAsync($"api/customers/{selectedCustomer.Id}");
                 if (response.IsSuccessStatusCode)
                 {
-                    LoadCustomers_Click(sender, e); // Reload customers
+                    LoadCustomers_Click(sender, e);
                 }
                 else
                 {
@@ -147,6 +139,27 @@ namespace TechLap.WPF
             }
         }
 
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            HideCustomerForm();
+        }
+
+        private void ShowCustomerForm()
+        {
+            NameTextBox.Text = _currentCustomer.Name;
+            EmailTextBox.Text = _currentCustomer.Email;
+            PhoneNumberTextBox.Text = _currentCustomer.PhoneNumber;
+            CustomerFormPanel.Visibility = Visibility.Visible;
+        }
+
+        private void HideCustomerForm()
+        {
+            CustomerFormPanel.Visibility = Visibility.Collapsed;
+            NameTextBox.Clear();
+            EmailTextBox.Clear();
+            PhoneNumberTextBox.Clear();
+            _currentCustomer = null;
+        }
     }
 
     public class ApiResponse
