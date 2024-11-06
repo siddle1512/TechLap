@@ -10,36 +10,41 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Row="0">
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="2">
             <Button Content="Load Products" Click="LoadProducts_Click" Width="150" Margin="10"/>
-            <DataGrid x:Name="ProductDataGrid" AutoGenerateColumns="False" Margin="10" Height="300" CanUserAddRows="False">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="Brand" Binding="{Binding Brand}" />
-                    <DataGridTextColumn Header="Model" Binding="{Binding Model}" />
-                    <DataGridTextColumn Header="Cpu" Binding="{Binding Cpu}" />
-                    <DataGridTextColumn Header="Ram" Binding="{Binding Ram}" />
-                    <DataGridTextColumn Header="Vga" Binding="{Binding Vga}" />
-                    <DataGridTextColumn Header="ScreenSize" Binding="{Binding ScreenSize}" />
-                    <DataGridTextColumn Header="HardDisk" Binding="{Binding HardDisk}" />
-                    <DataGridTextColumn Header="OperatingSystem" Binding="{Binding OperatingSystem}" />
-                    <DataGridTextColumn Header="Price" Binding="{Binding Price}" />
-                    <DataGridTextColumn Header="Stock" Binding="{Binding Stock}" />
-                    <DataGridTextColumn Header="Image" Binding="{Binding Image}" />
-                    <DataGridTextColumn Header="CategoryId" Binding="{Binding Stock}" />
-
-                </DataGrid.Columns>
-            </DataGrid>
-
-            <StackPanel Orientation="Horizontal" Margin="10">
-                <Button Content="Add" Click="AddProduct_Click" Width="75" Margin="5"/>
-                <Button Content="Update" Click="UpdateProduct_Click" Width="75" Margin="5"/>
-                <Button Content="Delete" Click="DeleteProduct_Click" Width="75" Margin="5"/>
-            </StackPanel>
         </StackPanel>
 
-        <local:ProductForm x:Name="ProductForm" Margin="378,79,22,78" Visibility="Collapsed"/>
+        <DataGrid x:Name="ProductDataGrid" AutoGenerateColumns="False" Margin="10" CanUserAddRows="False" Grid.Row="1" Grid.Column="0">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Brand" Binding="{Binding Brand}" />
+                <DataGridTextColumn Header="Model" Binding="{Binding Model}" />
+                <DataGridTextColumn Header="Cpu" Binding="{Binding Cpu}" />
+                <DataGridTextColumn Header="Ram" Binding="{Binding Ram}" />
+                <DataGridTextColumn Header="Vga" Binding="{Binding Vga}" />
+                <DataGridTextColumn Header="ScreenSize" Binding="{Binding ScreenSize}" />
+                <DataGridTextColumn Header="HardDisk" Binding="{Binding HardDisk}" />
+                <DataGridTextColumn Header="OperatingSystem" Binding="{Binding OperatingSystem}" />
+                <DataGridTextColumn Header="Price" Binding="{Binding Price}" />
+                <DataGridTextColumn Header="Stock" Binding="{Binding Stock}" />
+                <DataGridTextColumn Header="Image" Binding="{Binding Image}" />
+                <DataGridTextColumn Header="CategoryId" Binding="{Binding Stock}" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Orientation="Horizontal" Margin="10" Grid.Row="2" Grid.Column="0">
+            <Button Content="Add" Click="AddProduct_Click" Width="75" Margin="5"/>
+            <Button Content="Update" Click="UpdateProduct_Click" Width="75" Margin="5"/>
+            <Button Content="Delete" Click="DeleteProduct_Click" Width="75" Margin="5"/>
+        </StackPanel>
+
+        <local:ProductForm x:Name="ProductForm" Margin="10" Visibility="Collapsed" Grid.Row="1" Grid.Column="1" Grid.RowSpan="2"/>
     </Grid>
 </UserControl>
