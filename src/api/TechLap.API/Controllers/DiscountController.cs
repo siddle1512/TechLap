@@ -41,11 +41,11 @@ namespace TechLap.API.Controllers
         }
         
         [Authorize(Roles = "User")]
-        [HttpPost]
-        [Route("delete")]
-        public async Task<IActionResult> DeleteDiscount(DeleteAdminDiscountRequest request)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteDiscount(int id)
         {
-            Discount discount = LazyMapper.Mapper.Map<Discount>(request);
+            var discount = await _discountRepository.GetByIdAsync(id);
+            if (discount == null) throw new NotFoundException("Discount not found.");
             await _discountRepository.DeleteAsync(discount);
             return CreateResponse(true, "Request processed successfully.", HttpStatusCode.OK, "Remove discountId " + discount.Id + " successfully");
         }

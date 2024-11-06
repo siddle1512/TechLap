@@ -293,8 +293,8 @@ namespace TechLap.WPF.DiscountsWindow
                         var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
 
                         // Gửi yêu cầu POST đến API xóa discount
-                        HttpResponseMessage response = await client.PostAsync(
-                            ConfigurationManager.AppSettings["ApiEndpoint"] + "/api/discounts/delete", content);
+                        HttpResponseMessage response = await client.DeleteAsync(
+                            ConfigurationManager.AppSettings["ApiEndpoint"] + "/api/discounts/"+_selectedDiscount.Id); ;
 
                         response.EnsureSuccessStatusCode();
 
