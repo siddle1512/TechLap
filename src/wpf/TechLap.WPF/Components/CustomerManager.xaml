@@ -3,15 +3,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:TechLap.WPF"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- For buttons and DataGrid -->
             <RowDefinition Height="*"/>
-            <!-- For CustomerForm -->
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0">
@@ -32,6 +29,22 @@
             </StackPanel>
         </StackPanel>
 
-        <local:CustomerForm x:Name="CustomerForm" Margin="378,79,22,78" Visibility="Collapsed"/>
+        <StackPanel x:Name="CustomerFormPanel" Grid.Row="1" Margin="10" Visibility="Collapsed">
+            <TextBlock Text="Customer Details" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+
+            <TextBlock Text="Name:"/>
+            <TextBox x:Name="NameTextBox" Width="200" Margin="0,0,0,5"/>
+
+            <TextBlock Text="Email:"/>
+            <TextBox x:Name="EmailTextBox" Width="200" Margin="0,0,0,5"/>
+
+            <TextBlock Text="Phone Number:"/>
+            <TextBox x:Name="PhoneNumberTextBox" Width="200" Margin="0,0,0,15"/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Save" Click="SaveButton_Click" Width="75" Margin="5"/>
+                <Button Content="Cancel" Click="CancelButton_Click" Width="75" Margin="5"/>
+            </StackPanel>
+        </StackPanel>
     </Grid>
 </UserControl>
