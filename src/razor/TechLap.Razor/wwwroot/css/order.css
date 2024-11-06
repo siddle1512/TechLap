@@ -1,4 +1,8 @@
-﻿.table {
+﻿.pageorder {
+    padding-bottom: 7.8vh !important;
+}
+
+.table {
     margin-top: 20px;
     min-height: 300px;
 }
