@@ -1,10 +1,9 @@
-﻿using Azure;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 using System.Net;
 using TechLap.API.DTOs.Requests;
 using TechLap.API.DTOs.Responses.ProductDTOs;
-using TechLap.API.DTOs.Responses.ProductRespones;
 using TechLap.API.Exceptions;
 using TechLap.API.Mapper;
 using TechLap.API.Models;
@@ -13,7 +12,7 @@ using TechLap.API.Services.Repositories.IRepositories;
 namespace TechLap.API.Controllers
 {
     [ApiController]
-    [Route("api/products")]
+    [Route("odata/[controller]")]
     public class ProductController : BaseController<ProductController>
     {
         private IProductRepository _productRepository;
@@ -35,12 +34,14 @@ namespace TechLap.API.Controllers
 
         [HttpGet]
         [Authorize(Roles = "User, Admin")]
-        [Route("/api/products")]
+        [EnableQuery]
+
         public async Task<IActionResult> GetAllProducts()
         {
             var products = await _productRepository.GetAllAsync(p => true);
             var response = LazyMapper.Mapper.Map<IEnumerable<ProductResponse>>(products);
-            return CreateResponse<IEnumerable<ProductResponse>>(true, "Request processed successfully.", HttpStatusCode.OK, response);
+            //return CreateResponse<IEnumerable<ProductResponse>>(true, "Request processed successfully.", HttpStatusCode.OK, response);
+            return Ok(response);
         }
 
         [HttpGet]
@@ -98,11 +99,11 @@ namespace TechLap.API.Controllers
 
             return CreateResponse<string>(true, "Request processed successfully.", HttpStatusCode.OK);
         }
-        
+
         [HttpPost]
         [Authorize(Roles = "User")]
         [Route("searchConfiguration")]
-        public async Task<IActionResult> GetProductsConfiguration( SearchProductsRequest request)
+        public async Task<IActionResult> GetProductsConfiguration(SearchProductsRequest request)
         {
             var products = await _productRepository.SearchProductsAsync(request);
             var response = LazyMapper.Mapper.Map<IEnumerable<ProductResponse>>(products);
