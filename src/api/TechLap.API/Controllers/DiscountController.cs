@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 using TechLap.API.DTOs.Requests.DiscountRequests;
 using TechLap.API.DTOs.Responses.DiscountRespones;
 using TechLap.API.Exceptions;
@@ -21,11 +22,18 @@ namespace TechLap.API.Controllers
        
         [Authorize(Roles = "Admin,User")]
         [HttpGet]
+        [EnableQuery]
         public async Task<IActionResult> GetDiscounts()
         {
             
             var discounts = await _discountRepository.GetAllAsync(d => true);
             var response = LazyMapper.Mapper.Map<IEnumerable<GetAdminDiscountRespones>>(discounts);
+
+            if (Request.QueryString.HasValue && Request.QueryString.Value.Contains("$"))
+            {
+                return Ok(response.AsQueryable());
+            }
+
             return CreateResponse(true, "Request processed successfully.", HttpStatusCode.OK, response);
     
         }

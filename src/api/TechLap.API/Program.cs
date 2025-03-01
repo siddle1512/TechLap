@@ -1,6 +1,7 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -25,6 +26,10 @@ JwtConfig.SetSecret(jwtSettings);
 builder.Services.AddControllers(cfg =>
 {
     cfg.Filters.Add(typeof(ExceptionFilter));
+})
+.AddOData(opt =>
+{
+    opt.Select().Filter().Count().OrderBy().Expand();
 });
 
 //Validatior
