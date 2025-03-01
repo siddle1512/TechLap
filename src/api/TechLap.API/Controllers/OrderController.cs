@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 using System.Net;
 using TechLap.API.DTOs.Requests;
 using TechLap.API.DTOs.Responses.OrderDTOs;
@@ -24,6 +25,7 @@ namespace TechLap.API.Controllers
 
         [Authorize(Roles = "Admin, User")]
         [HttpGet]
+        [EnableQuery]
         public async Task<IActionResult> GetOrders()
         {
             var userId = GetUserIdFromToken();
@@ -31,6 +33,12 @@ namespace TechLap.API.Controllers
             var orders = await _orderRepository.GetAllAsync(o => User.IsInRole("Admin") || (userId != null && o.UserId == userId.Value));
 
             var response = LazyMapper.Mapper.Map<IEnumerable<OrderResponse>>(orders);
+
+            if (Request.QueryString.HasValue && Request.QueryString.Value.Contains("$"))
+            {
+                return Ok(response.AsQueryable());
+            }
+
             return CreateResponse(true, "Request processed successfully.", HttpStatusCode.OK, response);
         }
 

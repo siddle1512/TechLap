@@ -1,6 +1,7 @@
 ﻿using Azure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 using System.Net;
 using TechLap.API.DTOs.Requests;
 using TechLap.API.DTOs.Responses.ProductDTOs;
@@ -35,11 +36,18 @@ namespace TechLap.API.Controllers
 
         [HttpGet]
         [Authorize(Roles = "User, Admin")]
+        [EnableQuery]
         [Route("/api/products")]
         public async Task<IActionResult> GetAllProducts()
         {
             var products = await _productRepository.GetAllAsync(p => true);
             var response = LazyMapper.Mapper.Map<IEnumerable<ProductResponse>>(products);
+
+            if (Request.QueryString.HasValue && Request.QueryString.Value.Contains("$"))
+            {
+                return Ok(response.AsQueryable());
+            }
+
             return CreateResponse<IEnumerable<ProductResponse>>(true, "Request processed successfully.", HttpStatusCode.OK, response);
         }
 
