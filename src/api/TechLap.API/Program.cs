@@ -4,12 +4,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OData.ModelBuilder;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using TechLap.API.Configurations;
 using TechLap.API.Data;
 using TechLap.API.Hubs;
 using TechLap.API.Mapper.MappingProfiles;
+using TechLap.API.Models;
 using TechLap.API.Services.Filters;
 using TechLap.API.Services.Repositories.IRepositories;
 using TechLap.API.Services.Repositories.IRepositories.Discounts;
@@ -23,7 +25,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 JwtConfig.SetSecret(jwtSettings);
 
-builder.Services.AddControllers(cfg =>
+builder.Services.AddControllers().AddOData(cfg =>
 {
     cfg.Filters.Add(typeof(ExceptionFilter));
 })
@@ -142,6 +144,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseODataBatching();
 app.UseCors("SignalRPolicy");
 app.UseHttpsRedirection();
 
@@ -153,4 +156,4 @@ app.MapControllers();
 
 app.MapHub<ChatHub>("/chatHub");
 
-app.Run();
+await app.RunAsync();
