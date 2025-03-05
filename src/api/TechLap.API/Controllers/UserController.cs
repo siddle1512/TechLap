@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 using System.Net;
 using TechLap.API.DTOs.Requests;
 using TechLap.API.DTOs.Responses.UserDTOs;
@@ -43,11 +44,16 @@ namespace TechLap.API.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpGet]
+        [EnableQuery]
         [Route("/api/users")]
         public async Task<IActionResult> GetUsers()
         {
             var users = await _userRepository.GetAllAsync(o => true);
             var response = LazyMapper.Mapper.Map<IEnumerable<UserResponse>>(users);
+            if (Request.QueryString.HasValue && Request.QueryString.Value.Contains("$"))
+            {
+                return Ok(response.AsQueryable());
+            }
             return CreateResponse<IEnumerable<UserResponse>>(true, "Request processed successfully.", HttpStatusCode.OK, response);
         }
 
