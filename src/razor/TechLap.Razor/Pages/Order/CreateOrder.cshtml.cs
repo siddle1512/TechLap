@@ -18,7 +18,6 @@ namespace TechLap.Razor.Pages.Order
         public OrderRequest OrderRequest { get; set; } = default!;
         [BindProperty]
         public List<OrderDetailRequest> OrderDetailRequest { get; set; } = new List<OrderDetailRequest>();
-        public List<ProductResponse>? Products { get; set; } = new List<ProductResponse>();
         public List<CustomerResponse>? Customers { get; set; } = new List<CustomerResponse>();
 
         public CreateModel(ILogger<CreateModel> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
@@ -36,7 +35,6 @@ namespace TechLap.Razor.Pages.Order
                 return RedirectToPage("/Login/Index");
             }
 
-            Products = await LoadDataAsync<ProductResponse>("api/products");
             Customers = await LoadDataAsync<CustomerResponse>("api/customers");
 
             return Page();
@@ -173,7 +171,6 @@ namespace TechLap.Razor.Pages.Order
                 ModelState.AddModelError(string.Empty, $"Error occurred while adding the order: {errorContent}");
 
                 // Reload the dropdown data
-                Products = await LoadDataAsync<ProductResponse>("api/products");
                 Customers = await LoadDataAsync<CustomerResponse>("api/customers");
                 return Page();
             }
@@ -183,7 +180,6 @@ namespace TechLap.Razor.Pages.Order
                 ModelState.AddModelError(string.Empty, "An unexpected error occurred while processing your request.");
 
                 // Reload the dropdown data
-                Products = await LoadDataAsync<ProductResponse>("api/products");
                 Customers = await LoadDataAsync<CustomerResponse>("api/customers");
                 return Page();
             }

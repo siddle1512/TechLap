@@ -100,9 +100,33 @@
 
 
 <script>
+    $(document).ready(function () {
+        loadProducts();
+    });
     // Convert Model.Products to JSON format for JavaScript usage
     const products = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Products));
+    const apiBaseUrl = "https://localhost:7097";
+    function loadProducts() {
+        $.ajax({
+            url: `${apiBaseUrl}/odata/Products`,
+            method: "GET",
+            success: function (response) {
+                const productSelect = document.getElementById('cmbProduct');
+                productSelect.innerHTML = '<option value="">Select product</option>'; // Xóa các tùy chọn cũ
 
+                response.value.forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.Id;
+                    option.text = product.Model;
+                    option.dataset.price = product.Price;
+                    productSelect.appendChild(option);
+                });
+            },
+            error: function (xhr, status, error) {
+                alert("Error loading products: " + error);
+            }
+        });
+    }
     let productsInOrder = []; // Array to store products added to the order
 
     // Function to search for products based on input
@@ -120,16 +144,14 @@
     // Function to handle product selection change
     function productSelectionChanged() {
         const productSelect = document.getElementById('cmbProduct');
-        const selectedProductId = productSelect.value;
-
-        // Find selected product to get the price
-        const selectedProduct = products.find(p => p.Id == selectedProductId);
+        const selectedOption = productSelect.selectedOptions[0];
         const priceInput = document.getElementById('txtPrice');
 
-        if (selectedProduct) {
-            priceInput.value = selectedProduct.Price.toFixed(2); // Set the price based on selected product
+        if (selectedOption) {
+            const price = selectedOption.dataset.price;
+            priceInput.value = parseFloat(price).toFixed(2); 
         } else {
-            priceInput.value = ''; // Reset price if no product is selected
+            priceInput.value = '';
         }
     }
 
