@@ -100,7 +100,7 @@ namespace TechLap.Razor.Pages.Product
             var token = Request.Cookies["AuthToken"];
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            string apiEndpoint = $"{_configuration["ApiEndPoint"]}/api/products/{id}";
+            string apiEndpoint = $"{_configuration["ApiEndPoint"]}/odata/product/{id}";
 
             try
             {
@@ -164,13 +164,13 @@ namespace TechLap.Razor.Pages.Product
 
             try
             {
-                var response = await client.GetAsync($"{apiEndpoint}/api/products");
+                var response = await client.GetAsync($"{apiEndpoint}/odata/product");
 
                 if (response.IsSuccessStatusCode)
                 {
                     var responseBody = await response.Content.ReadAsStringAsync();
-                    var apiResponse = JsonConvert.DeserializeObject<ApiResponse<List<ProductResponse>>>(responseBody);
-                    return apiResponse?.Data;
+                    var products = JsonConvert.DeserializeObject<List<ProductResponse>>(responseBody);
+                    return products;
                 }
                 else
                 {
