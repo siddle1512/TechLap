@@ -19,6 +19,8 @@ namespace TechLap.Razor.Pages.Order
         [BindProperty]
         public List<OrderDetailRequest> OrderDetailRequest { get; set; } = new List<OrderDetailRequest>();
         public List<CustomerResponse>? Customers { get; set; } = new List<CustomerResponse>();
+        //token
+        public string Token { get; set; } = string.Empty;
 
         public CreateModel(ILogger<CreateModel> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
@@ -34,7 +36,7 @@ namespace TechLap.Razor.Pages.Order
                 Response.Cookies.Delete("AuthToken");
                 return RedirectToPage("/Login/Index");
             }
-
+            Token = Request.Cookies["AuthToken"];
             Customers = await LoadDataAsync<CustomerResponse>("api/customers");
 
             return Page();
