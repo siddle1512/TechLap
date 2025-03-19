@@ -101,13 +101,23 @@
     });
     // Convert Model.Products to JSON format for JavaScript usage
     const apiBaseUrl = "https://localhost:7097";
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
     function loadProducts() {
+        const authToken = getCookie('authToken');
+
         $.ajax({
-            url: `${apiBaseUrl}/odata/Products`,
+            url: `${apiBaseUrl}/odata/Product`,
             method: "GET",
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            },
             success: function (response) {
                 const productSelect = document.getElementById('cmbProduct');
-                productSelect.innerHTML = '<option value="">Select product</option>'; // Xóa các tùy chọn cũ
+                productSelect.innerHTML = '<option value="">Select product</option>'; // Clear old options
 
                 response.value.forEach(product => {
                     const option = document.createElement('option');
