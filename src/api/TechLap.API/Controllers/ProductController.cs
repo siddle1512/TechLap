@@ -1,11 +1,9 @@
-﻿using Azure;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using System.Net;
 using TechLap.API.DTOs.Requests;
 using TechLap.API.DTOs.Responses.ProductDTOs;
-using TechLap.API.DTOs.Responses.ProductRespones;
 using TechLap.API.Exceptions;
 using TechLap.API.Mapper;
 using TechLap.API.Models;
@@ -14,10 +12,9 @@ using TechLap.API.Services.Repositories.IRepositories;
 namespace TechLap.API.Controllers
 {
     [ApiController]
-    [Route("api/products")]
     public class ProductController : BaseController<ProductController>
     {
-        private IProductRepository _productRepository;
+        private readonly IProductRepository _productRepository;
 
         public ProductController(IProductRepository productRepository)
         {
@@ -40,15 +37,18 @@ namespace TechLap.API.Controllers
         [Route("/api/products")]
         public async Task<IActionResult> GetAllProducts()
         {
-            var products = await _productRepository.GetAllAsync(p => true);
-            var response = LazyMapper.Mapper.Map<IEnumerable<ProductResponse>>(products);
-
+            // Đối với OData queries
             if (Request.QueryString.HasValue && Request.QueryString.Value.Contains("$"))
             {
+                var products = await _productRepository.GetAllAsync(p => true);
+                var response = LazyMapper.Mapper.Map<IEnumerable<ProductResponse>>(products);
                 return Ok(response.AsQueryable());
             }
 
-            return CreateResponse<IEnumerable<ProductResponse>>(true, "Request processed successfully.", HttpStatusCode.OK, response);
+            // Đối với non-OData queries
+            var allProducts = await _productRepository.GetAllAsync(p => true);
+            var allResponse = LazyMapper.Mapper.Map<IEnumerable<ProductResponse>>(allProducts);
+            return CreateResponse<IEnumerable<ProductResponse>>(true, "Request processed successfully.", HttpStatusCode.OK, allResponse);
         }
 
         [HttpGet]
@@ -92,8 +92,9 @@ namespace TechLap.API.Controllers
             return CreateResponse<int>(true, "Product updated successfully.", HttpStatusCode.OK, response.Id);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete]
         [Authorize(Roles = "User, Admin")]
+        [Route("/api/products/{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var existingProduct = await _productRepository.GetByIdAsync(id);
@@ -104,13 +105,13 @@ namespace TechLap.API.Controllers
 
             await _productRepository.DeleteAsync(existingProduct);
 
-            return CreateResponse<string>(true, "Request processed successfully.", HttpStatusCode.OK);
+            return CreateResponse<string>(true, "Product deleted successfully.", HttpStatusCode.OK);
         }
-        
+
         [HttpPost]
         [Authorize(Roles = "User")]
-        [Route("searchConfiguration")]
-        public async Task<IActionResult> GetProductsConfiguration( SearchProductsRequest request)
+        [Route("/api/products/searchConfiguration")]
+        public async Task<IActionResult> GetProductsConfiguration(SearchProductsRequest request)
         {
             var products = await _productRepository.SearchProductsAsync(request);
             var response = LazyMapper.Mapper.Map<IEnumerable<ProductResponse>>(products);

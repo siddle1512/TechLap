@@ -23,23 +23,25 @@ namespace TechLap.API.Controllers
             _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository));
         }
 
-        [Authorize(Roles = "Admin, User")]
         [HttpGet]
+        [Authorize(Roles = "Admin, User")]
         [EnableQuery]
         public async Task<IActionResult> GetOrders()
         {
             var userId = GetUserIdFromToken();
 
-            var orders = await _orderRepository.GetAllAsync(o => User.IsInRole("Admin") || (userId != null && o.UserId == userId.Value));
-
-            var response = LazyMapper.Mapper.Map<IEnumerable<OrderResponse>>(orders);
-
+            // Đối với OData queries
             if (Request.QueryString.HasValue && Request.QueryString.Value.Contains("$"))
             {
+                var orders = await _orderRepository.GetAllAsync(o => User.IsInRole("Admin") || (userId != null && o.UserId == userId.Value));
+                var response = LazyMapper.Mapper.Map<IEnumerable<OrderResponse>>(orders);
                 return Ok(response.AsQueryable());
             }
 
-            return CreateResponse(true, "Request processed successfully.", HttpStatusCode.OK, response);
+            // Đối với non-OData queries
+            var allOrders = await _orderRepository.GetAllAsync(o => User.IsInRole("Admin") || (userId != null && o.UserId == userId.Value));
+            var allResponse = LazyMapper.Mapper.Map<IEnumerable<OrderResponse>>(allOrders);
+            return CreateResponse<IEnumerable<OrderResponse>>(true, "Request processed successfully.", HttpStatusCode.OK, allResponse);
         }
 
         [Authorize(Roles = "Admin, User")]
