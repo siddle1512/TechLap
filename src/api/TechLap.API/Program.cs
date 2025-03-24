@@ -23,13 +23,14 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 JwtConfig.SetSecret(jwtSettings);
 
-builder.Services.AddControllers(cfg =>
+builder.Services.AddControllers(options =>
 {
-    cfg.Filters.Add(typeof(ExceptionFilter));
+    options.Filters.Add(typeof(ExceptionFilter));
 })
-.AddOData(opt =>
+.AddOData(options =>
 {
-    opt.Select().Filter().Count().OrderBy().Expand();
+    options.Select().Filter().Count().OrderBy().Expand();
+    options.EnableQueryFeatures(100);
 });
 
 //Validatior
@@ -142,6 +143,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseODataBatching();
 app.UseCors("SignalRPolicy");
 app.UseHttpsRedirection();
 
@@ -153,4 +155,4 @@ app.MapControllers();
 
 app.MapHub<ChatHub>("/chatHub");
 
-app.Run();
+await app.RunAsync();

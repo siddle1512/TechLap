@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 using System.Net;
 using TechLap.API.DTOs.Requests;
 using TechLap.API.DTOs.Responses.CustomerDTOs;
@@ -20,14 +21,23 @@ namespace TechLap.API.Controllers
             _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository));
         }
 
-        [Authorize(Roles = "Admin, User")]
         [HttpGet]
+        [Authorize(Roles = "Admin, User")]
+        [EnableQuery]
         public async Task<IActionResult> GetCustomers()
         {
-            var customers = await _customerRepository.GetAllAsync(c => true);
+            // Đối với OData queries
+            if (Request.QueryString.HasValue && Request.QueryString.Value.Contains("$"))
+            {
+                var customers = await _customerRepository.GetAllAsync(c => true);
+                var response = LazyMapper.Mapper.Map<IEnumerable<CustomerResponse>>(customers);
+                return Ok(response.AsQueryable());
+            }
 
-            var response = LazyMapper.Mapper.Map<IEnumerable<CustomerResponse>>(customers);
-            return CreateResponse(true, "Request processed successfully.", HttpStatusCode.OK, response);
+            // Đối với non-OData queries
+            var allCustomers = await _customerRepository.GetAllAsync(c => true);
+            var allResponse = LazyMapper.Mapper.Map<IEnumerable<CustomerResponse>>(allCustomers);
+            return CreateResponse<IEnumerable<CustomerResponse>>(true, "Request processed successfully.", HttpStatusCode.OK, allResponse);
         }
 
         [Authorize(Roles = "Admin, User")]
