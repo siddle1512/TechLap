@@ -4,14 +4,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OData.ModelBuilder;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using TechLap.API.Configurations;
 using TechLap.API.Data;
 using TechLap.API.Hubs;
 using TechLap.API.Mapper.MappingProfiles;
-using TechLap.API.Models;
 using TechLap.API.Services.Filters;
 using TechLap.API.Services.Repositories.IRepositories;
 using TechLap.API.Services.Repositories.IRepositories.Discounts;
@@ -25,9 +23,9 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 JwtConfig.SetSecret(jwtSettings);
 
-builder.Services.AddControllers().AddOData(cfg =>
+builder.Services.AddControllers(options =>
 {
-    cfg.Filters.Add(typeof(ExceptionFilter));
+    options.Filters.Add(typeof(ExceptionFilter));
 })
 .AddOData(opt =>
 {
