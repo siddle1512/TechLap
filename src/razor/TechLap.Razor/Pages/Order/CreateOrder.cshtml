@@ -6,6 +6,94 @@
 
 <head>
     <link href="~/css/update-order.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .product-search-container, .customer-search-container {
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .search-indicator {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Style for custom dropdown */
+        .custom-dropdown {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            z-index: 1000;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            display: none;
+        }
+
+            .dropdown-menu.show {
+                display: block;
+            }
+
+        .dropdown-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+            .dropdown-item:hover {
+                background-color: #f8f9fa;
+            }
+
+        /* Hidden original select */
+        .hidden-select {
+            display: none;
+        }
+
+        /* Quantity input styling */
+        .quantity-input {
+            width: 80px;
+            text-align: center;
+        }
+
+        /* Price formatting */
+        .price-display {
+            font-family: monospace;
+        }
+
+        /* Table styling */
+        .cart-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            .cart-table th {
+                background-color: #f5f5f5;
+                padding: 8px;
+                text-align: left;
+            }
+
+            .cart-table td {
+                padding: 8px;
+                border-bottom: 1px solid #eee;
+            }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+    </style>
 </head>
 
 <div class="container formOrder">
@@ -16,26 +104,31 @@
             <!-- Left Panel -->
             <div class="col-md-6">
                 <h5>Select Product</h5>
-                <input type="text" id="txtSearchProduct" class="form-control" placeholder="Search product..." onchange="searchProduct()" />
-                <select id="cmbProduct" class="form-select" onchange="productSelectionChanged()">
-                    <option value="">Select product</option>
-                    <!-- Product options will be populated here -->
-                    @foreach (var product in Model.Products)
-                    {
-                        <option value="@product.Id">@product.Model</option>
-                    }
-                </select>
+                <div class="product-search-container custom-dropdown">
+                    <input type="text" id="txtSearchProduct" class="form-control" placeholder="Search product..." autocomplete="off" />
+                    <div class="search-indicator" id="searchIndicator" style="display:none;">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    </div>
+                    <!-- Custom dropdown menu that will contain product options -->
+                    <ul id="productDropdownMenu" class="dropdown-menu">
+                        <li class="dropdown-item" data-value="">Select product</li>
+                    </ul>
+                    <!-- Keep the original select for form data but hide it -->
+                    <select id="cmbProduct" class="form-select hidden-select" onchange="productSelectionChanged()">
+                        <option value="">Select product</option>
+                    </select>
+                </div>
                 <label class="mt-3">Quantity</label>
-                <input type="number" id="txtQuantity" class="form-control" onchange="quantityChanged()" />
+                <input type="number" id="txtQuantity" class="form-control" value="1" min="1" />
                 <label class="mt-3">Price</label>
                 <input type="text" id="txtPrice" class="form-control" readonly disabled />
                 <button id="btnAddProduct" type="button" class="btn btn-primary mt-2" onclick="addProduct()">Add Product</button>
-                <table class="table mt-3">
+                <table class="table mt-3 cart-table">
                     <thead>
                         <tr>
-                            <th>Product ID</th>
+                            <th>Product</th>
                             <th>Quantity</th>
-                            <th>Price</th>
+                            <th>Total Price</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -43,14 +136,18 @@
                         <!-- Product rows will be populated here -->
                         @for (int i = 0; i < Model.OrderDetailRequest.Count; i++)
                         {
-                            <tr>
-                                <td>@Model.OrderDetailRequest[i].ProductId</td>
+                            <tr data-product-id="@Model.OrderDetailRequest[i].ProductId">
                                 <td>
+                                    <span class="product-name">Product @Model.OrderDetailRequest[i].ProductId</span>
                                     <input type="hidden" name="OrderDetailRequest[@i].ProductId" value="@Model.OrderDetailRequest[i].ProductId" />
-                                    <input type="number" name="OrderDetailRequest[@i].Quantity" value="@Model.OrderDetailRequest[i].Quantity" readonly />
                                 </td>
                                 <td>
-                                    <input type="text" name="OrderDetailRequest[@i].Price" value="@Model.OrderDetailRequest[i].Price" readonly />
+                                    <input type="number" name="OrderDetailRequest[@i].Quantity" value="@Model.OrderDetailRequest[i].Quantity"
+                                           class="form-control quantity-input" min="1" onchange="updateLineTotal(this)" />
+                                </td>
+                                <td>
+                                    <span class="price-display">$@(string.Format("{0:N2}", Model.OrderDetailRequest[i].Price * Model.OrderDetailRequest[i].Quantity))</span>
+                                    <input type="hidden" name="OrderDetailRequest[@i].Price" value="@Model.OrderDetailRequest[i].Price" />
                                 </td>
                                 <td><button type="button" class="btn btn-danger" onclick="removeProduct('@Model.OrderDetailRequest[i].ProductId')">Remove</button></td>
                             </tr>
@@ -62,16 +159,32 @@
             <!-- Right Panel -->
             <div class="col-md-6">
                 <h5>Select Customer</h5>
-                <input type="text" id="txtCustomer" class="form-control" placeholder="Search customer..." onchange="searchCustomer()" />
-                <select id="cmbCustomer" name="OrderRequest.CustomerId" class="form-select">
-                    <option value="">Select customer</option>
-                    @foreach (var customer in Model.Customers)
-                    {
-                        <option value="@customer.Id">@customer.Name</option>
-                    }
-                </select>
+                <div class="customer-search-container custom-dropdown">
+                    <input type="text" id="txtCustomer" class="form-control" placeholder="Search customer..." autocomplete="off" />
+                    <div class="search-indicator" id="customerSearchIndicator" style="display:none;">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    </div>
+                    <!-- Custom dropdown menu for customers -->
+                    <ul id="customerDropdownMenu" class="dropdown-menu">
+                        <li class="dropdown-item" data-value="">Select customer</li>
+                        @foreach (var customer in Model.Customers)
+                        {
+                            <li class="dropdown-item" data-value="@customer.Id">@customer.Name</li>
+                        }
+                    </ul>
+                    <!-- Hidden select for form submission -->
+                    <select id="cmbCustomer" name="OrderRequest.CustomerId" class="form-select hidden-select">
+                        <option value="">Select customer</option>
+                        @foreach (var customer in Model.Customers)
+                        {
+                            <option value="@customer.Id">@customer.Name</option>
+                        }
+                    </select>
+                </div>
+
                 <label class="mt-3">Order Date</label>
                 <input asp-for="OrderRequest.OrderDate" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" id="txtOrderDate" class="form-control" readonly />
+
                 <label class="mt-3">Payment Method</label>
                 <select asp-for="OrderRequest.Payment" id="cmbPaymentMethod" class="form-select">
                     @foreach (var paymentMethod in Enum.GetValues(typeof(TechLap.API.Enums.PaymentMethod)))
@@ -79,6 +192,7 @@
                         <option value="@paymentMethod">@paymentMethod</option>
                     }
                 </select>
+
                 <label class="mt-3">Order Status</label>
                 <select asp-for="OrderRequest.Status" id="cmbOrderStatus" class="form-select">
                     @foreach (var orderStatus in Enum.GetValues(typeof(TechLap.API.Enums.OrderStatus)))
@@ -86,10 +200,16 @@
                         <option value="@orderStatus">@orderStatus</option>
                     }
                 </select>
+
                 <label class="mt-3">Discount Code</label>
                 <input asp-for="OrderRequest.DiscountId" type="text" id="txtDiscountCode" class="form-control" />
+
                 <label class="mt-3">Total Price</label>
-                <input asp-for="OrderRequest.TotalPrice" type="text" id="txtTotalPrice" class="form-control" style="margin-bottom: 10px;" readonly />
+                <div class="input-group" style="display: flex;">
+                    <span class="input-group-text">$</span>
+                    <input asp-for="OrderRequest.TotalPrice" type="text" id="txtTotalPrice" class="form-control price-display" style="margin-bottom: 10px; margin-left: 5px;" readonly />
+                </div>
+
                 <button type="submit" id="btnSave" class="btn btn-success mt-2">Save</button>
                 <a role="button" href="/Order" id="btnCancel" class="btn btn-outline-primary mt-2">Cancel</a>
             </div>
@@ -97,55 +217,410 @@
     </div>
 </div>
 
-
-
 <script>
-    // Convert Model.Products to JSON format for JavaScript usage
-    const products = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Products));
+    $(document).ready(function () {
+        loadProducts();
 
-    let productsInOrder = []; // Array to store products added to the order
+        // Set up custom dropdowns behavior
+        setupCustomDropdowns();
 
-    // Function to search for products based on input
+        // Add event listener for product search input
+        let searchTimeout;
+        $('#txtSearchProduct').on('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function() {
+                searchProduct();
+            }, 500); // 500ms delay after user stops typing
+        });
+
+        // Add event listener for customer search input
+        let customerSearchTimeout;
+        $('#txtCustomer').on('input', function() {
+            clearTimeout(customerSearchTimeout);
+            customerSearchTimeout = setTimeout(function() {
+                searchCustomer();
+            }, 300);
+        });
+
+        // Focus behavior for search inputs
+        $('#txtSearchProduct').on('focus', function() {
+            $('#productDropdownMenu').addClass('show');
+        });
+
+        $('#txtCustomer').on('focus', function() {
+            $('#customerDropdownMenu').addClass('show');
+        });
+
+        // Close dropdowns when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.product-search-container').length) {
+                $('#productDropdownMenu').removeClass('show');
+            }
+            if (!$(e.target).closest('.customer-search-container').length) {
+                $('#customerDropdownMenu').removeClass('show');
+            }
+        });
+
+        // Prevent dropdowns from closing when clicking inside
+        $('#txtSearchProduct').on('click', function(e) {
+            e.stopPropagation();
+            $('#productDropdownMenu').addClass('show');
+        });
+
+        $('#txtCustomer').on('click', function(e) {
+            e.stopPropagation();
+            $('#customerDropdownMenu').addClass('show');
+        });
+
+        // Format any existing prices
+        formatAllPrices();
+    });
+
+    // Constants
+    const apiBaseUrl = "https://localhost:7097";
+    // Global variable to store products
+    window.products = [];
+
+    // Format a number as currency
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value);
+    }
+
+    // Format all price displays in the page
+    function formatAllPrices() {
+        // Format the total price
+        const totalPriceInput = document.getElementById('txtTotalPrice');
+        if (totalPriceInput.value) {
+            totalPriceInput.value = formatCurrency(parseFloat(totalPriceInput.value));
+        }
+
+        // Format individual product prices
+        const priceDisplays = document.querySelectorAll('.price-display');
+        priceDisplays.forEach(display => {
+            if (display.tagName === 'INPUT') {
+                if (display.value) {
+                    display.value = formatCurrency(parseFloat(display.value));
+                }
+            } else {
+                const text = display.textContent;
+                if (text && !text.startsWith('$')) {
+                    display.textContent = '$' + formatCurrency(parseFloat(text));
+                }
+            }
+        });
+    }
+
+    // Setup custom dropdowns functionality
+    function setupCustomDropdowns() {
+        // Handle product dropdown selection
+        $(document).on('click', '#productDropdownMenu .dropdown-item', function() {
+            const value = $(this).data('value');
+            const text = $(this).text();
+            const price = $(this).data('price');
+
+            // Update the search box with the selected text
+            $('#txtSearchProduct').val(text);
+
+            // Update the hidden select and trigger change
+            $('#cmbProduct').val(value);
+
+            // Set default quantity to 1
+            $('#txtQuantity').val(1);
+
+            // Trigger change event manually
+            const event = new Event('change');
+            document.getElementById('cmbProduct').dispatchEvent(event);
+
+            // Set price if available
+            if (price) {
+                $('#txtPrice').val('$' + formatCurrency(parseFloat(price)));
+            }
+
+            // Hide dropdown
+            $('#productDropdownMenu').removeClass('show');
+        });
+
+        // Handle customer dropdown selection
+        $(document).on('click', '#customerDropdownMenu .dropdown-item', function() {
+            const value = $(this).data('value');
+            const text = $(this).text();
+
+            // Update the search box with the selected text
+            $('#txtCustomer').val(text);
+
+            // Update the hidden select
+            $('#cmbCustomer').val(value);
+
+            // Hide dropdown
+            $('#customerDropdownMenu').removeClass('show');
+        });
+    }
+
+    function getCookie(name) {
+        let cookieArr = document.cookie.split(";");
+        for (let i = 0; i < cookieArr.length; i++) {
+            let cookiePair = cookieArr[i].split("=");
+            if (name === cookiePair[0].trim()) {
+                return decodeURIComponent(cookiePair[1]);
+            }
+        }
+        return null;
+    }
+
+    function showSearchIndicator(elementId, show) {
+        document.getElementById(elementId).style.display = show ? 'block' : 'none';
+    }
+
+    function loadProducts() {
+        const authToken = '@Model.Token';
+
+        showSearchIndicator('searchIndicator', true);
+
+        $.ajax({
+            url: `${apiBaseUrl}/api/products?$orderby=Id desc&$top=5`,
+            method: "GET",
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            },
+            success: function (response) {
+                // Clear both the hidden select and the custom dropdown
+                const productSelect = document.getElementById('cmbProduct');
+                productSelect.innerHTML = '<option value="">Select product</option>';
+
+                const dropdownMenu = document.getElementById('productDropdownMenu');
+                dropdownMenu.innerHTML = '<li class="dropdown-item" data-value="">Select product</li>';
+
+                // Determine where the product list is stored in the response
+                let productList = response;
+
+                // Check if response is in OData format
+                if (response.value) {
+                    productList = response.value; // OData response
+                } else if (response.Data) {
+                    productList = response.Data; // Standard API response
+                }
+
+                // Store products for later use
+                window.products = productList;
+
+                if (Array.isArray(productList) && productList.length > 0) {
+                    productList.forEach(product => {
+                        // For the hidden select
+                        const option = document.createElement('option');
+                        // Check property names (could be Id or id, Model or model, etc.)
+                        const productId = product.id || product.Id;
+                        const productModel = product.model || product.Model;
+                        const productBrand = product.brand || product.Brand || '';
+                        const productPrice = product.price || product.Price;
+
+                        option.value = productId;
+                        option.text = `${productBrand} ${productModel}`;
+                        option.dataset.price = productPrice;
+                        productSelect.appendChild(option);
+
+                        // For the custom dropdown
+                        const dropdownItem = document.createElement('li');
+                        dropdownItem.className = 'dropdown-item';
+                        dropdownItem.textContent = `${productBrand} ${productModel}`;
+                        dropdownItem.dataset.value = productId;
+                        dropdownItem.dataset.price = productPrice;
+                        dropdownItem.dataset.name = `${productBrand} ${productModel}`;
+                        dropdownMenu.appendChild(dropdownItem);
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                alert("Error loading products: " + error);
+            },
+            complete: function() {
+                showSearchIndicator('searchIndicator', false);
+            }
+        });
+    }
+
     function searchProduct() {
         const searchValue = document.getElementById('txtSearchProduct').value.toLowerCase();
-        const productSelect = document.getElementById('cmbProduct');
 
-        // Filter products based on search value
-        for (let i = 0; i < productSelect.options.length; i++) {
-            const option = productSelect.options[i];
-            option.style.display = option.text.toLowerCase().includes(searchValue) ? '' : 'none';
+        // Don't search if string is too short (1 or 2 characters)
+        if (searchValue.length < 2) {
+            return;
+        }
+
+        const authToken = '@Model.Token';
+        showSearchIndicator('searchIndicator', true);
+
+        // Show dropdown while searching
+        $('#productDropdownMenu').addClass('show');
+
+        // Call API with filter by Model (product name)
+        $.ajax({
+            url: `${apiBaseUrl}/api/products?$filter=contains(tolower(Model),'${searchValue}') or contains(tolower(Brand),'${searchValue}')&$top=5`,
+            method: "GET",
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            },
+            success: function (response) {
+                // Clear both the hidden select and the custom dropdown
+                const productSelect = document.getElementById('cmbProduct');
+                productSelect.innerHTML = '<option value="">Select product</option>';
+
+                const dropdownMenu = document.getElementById('productDropdownMenu');
+                dropdownMenu.innerHTML = '<li class="dropdown-item" data-value="">Select product</li>';
+
+                // Determine product list from response
+                let productList = response;
+
+                if (response.value) {
+                    productList = response.value; // OData response
+                } else if (response.Data) {
+                    productList = response.Data; // Standard API response
+                }
+
+                if (Array.isArray(productList) && productList.length > 0) {
+                    productList.forEach(product => {
+                        // For the hidden select
+                        const option = document.createElement('option');
+                        const productId = product.id || product.Id;
+                        const productModel = product.model || product.Model;
+                        const productBrand = product.brand || product.Brand || '';
+                        const productPrice = product.price || product.Price;
+
+                        option.value = productId;
+                        option.text = `${productBrand} ${productModel}`;
+                        option.dataset.price = productPrice;
+                        productSelect.appendChild(option);
+
+                        // For the custom dropdown
+                        const dropdownItem = document.createElement('li');
+                        dropdownItem.className = 'dropdown-item';
+                        dropdownItem.textContent = `${productBrand} ${productModel}`;
+                        dropdownItem.dataset.value = productId;
+                        dropdownItem.dataset.price = productPrice;
+                        dropdownItem.dataset.name = `${productBrand} ${productModel}`;
+                        dropdownMenu.appendChild(dropdownItem);
+                    });
+                } else {
+                    dropdownMenu.innerHTML = '<li class="dropdown-item" data-value="">No products found</li>';
+
+                    // If no results found, reload all products after a delay
+                    // setTimeout(() => {
+                    //     loadProducts();
+                    // }, 2000);
+                }
+            },
+            error: function (xhr, status, error) {
+                const dropdownMenu = document.getElementById('productDropdownMenu');
+                dropdownMenu.innerHTML = '<li class="dropdown-item" data-value="">Error loading products</li>';
+
+                // On error, reload all products
+                setTimeout(() => {
+                    loadProducts();
+                }, 2000);
+            },
+            complete: function() {
+                showSearchIndicator('searchIndicator', false);
+            }
+        });
+    }
+
+    // Function to search for customers based on input
+    function searchCustomer() {
+        const searchValue = document.getElementById('txtCustomer').value.toLowerCase();
+        if (searchValue.length < 1) return;
+
+        // Show the dropdown
+        $('#customerDropdownMenu').addClass('show');
+        showSearchIndicator('customerSearchIndicator', true);
+
+        // Filter customer dropdown items
+        const dropdownItems = document.querySelectorAll('#customerDropdownMenu .dropdown-item');
+        let found = false;
+
+        dropdownItems.forEach(item => {
+            if (item.dataset.value === '') return; // Skip the default option
+
+            const customerName = item.textContent.toLowerCase();
+            const visible = customerName.includes(searchValue);
+            item.style.display = visible ? '' : 'none';
+
+            if (visible) found = true;
+        });
+
+        showSearchIndicator('customerSearchIndicator', false);
+
+        // Update dropdown message if no matches
+        if (!found) {
+            const noResultItem = document.createElement('li');
+            noResultItem.className = 'dropdown-item';
+            noResultItem.textContent = 'No matching customers';
+            noResultItem.dataset.value = '';
+
+            // Remove any existing "no results" message
+            dropdownItems.forEach(item => {
+                if (item.textContent === 'No matching customers') {
+                    item.remove();
+                }
+            });
+
+            document.getElementById('customerDropdownMenu').appendChild(noResultItem);
         }
     }
 
-    // Function to handle product selection change
+    // Function to reset product search
+    function resetProductSearch() {
+        document.getElementById('txtSearchProduct').value = '';
+        loadProducts();
+    }
+
+    // Modified productSelectionChanged to handle empty product list
     function productSelectionChanged() {
         const productSelect = document.getElementById('cmbProduct');
-        const selectedProductId = productSelect.value;
 
-        // Find selected product to get the price
-        const selectedProduct = products.find(p => p.Id == selectedProductId);
+        // Check if the product list is empty (only has the default option)
+        if (productSelect.options.length <= 1) {
+            loadProducts();
+            return;
+        }
+
+        const selectedOption = productSelect.selectedOptions[0];
         const priceInput = document.getElementById('txtPrice');
+        const quantityInput = document.getElementById('txtQuantity');
 
-        if (selectedProduct) {
-            priceInput.value = selectedProduct.Price.toFixed(2); // Set the price based on selected product
+        // Set default quantity to 1 if not already set
+        if (!quantityInput.value || quantityInput.value < 1) {
+            quantityInput.value = 1;
+        }
+
+        if (selectedOption && selectedOption.value) {
+            const price = selectedOption.dataset.price;
+            priceInput.value = '$' + formatCurrency(parseFloat(price));
         } else {
-            priceInput.value = ''; // Reset price if no product is selected
+            priceInput.value = '';
         }
     }
 
-    // Update the quantityChanged function
-    function quantityChanged() {
-        const productTableBody = document.getElementById('dgProducts');
-        const rows = productTableBody.getElementsByTagName('tr');
-        let totalPrice = 0;
+    // Update a single line's total price
+    function updateLineTotal(quantityInput) {
+        const row = quantityInput.closest('tr');
+        const productId = row.getAttribute('data-product-id');
+        const quantity = parseInt(quantityInput.value) || 0;
 
-        for (let row of rows) {
-            const quantity = parseFloat(row.querySelector('input[name$="].Quantity"]').value) || 0;
-            const price = parseFloat(row.querySelector('input[name$="].Price"]').value) || 0;
-            totalPrice += quantity * price;
-        }
+        // Find the hidden price input in this row
+        const priceInput = row.querySelector('input[name$="].Price"]');
+        const priceValue = parseFloat(priceInput.value) || 0;
 
-        document.getElementById('txtTotalPrice').value = totalPrice.toFixed(2);
+        // Calculate the new line total
+        const lineTotal = quantity * priceValue;
+
+        // Update the displayed price
+        const priceDisplay = row.querySelector('.price-display');
+        priceDisplay.textContent = '$' + formatCurrency(lineTotal);
+
+        // Update the total price for the entire order
+        updateTotalPrice();
     }
 
     // Function to add selected product to the order
@@ -153,6 +628,7 @@
         const productSelect = document.getElementById('cmbProduct');
         const selectedProductId = productSelect.value;
         const quantityInput = document.getElementById('txtQuantity');
+        const priceInput = document.getElementById('txtPrice');
 
         if (!selectedProductId) {
             alert('Please select a product');
@@ -165,123 +641,146 @@
             return;
         }
 
+        let price = priceInput.value;
+        // Remove currency symbol and formatting if present
+        if (price.startsWith('$')) {
+            price = price.substring(1);
+        }
+        price = parseFloat(price.replace(/,/g, '')) || 0;
+
+        if (price <= 0) {
+            alert('Invalid price');
+            return;
+        }
+
         const productTableBody = document.getElementById('dgProducts');
-        let existingRow = null;
+        const selectedOption = productSelect.selectedOptions[0];
+        const productName = selectedOption.text;
 
         // Check if product already exists in the table
-        for (let row of productTableBody.getElementsByTagName('tr')) {
-            const productId = row.querySelector('input[name$="].ProductId"]').value;
-            if (productId === selectedProductId) {
-                existingRow = row;
+        let productExists = false;
+        const rows = productTableBody.getElementsByTagName('tr');
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            if (row.getAttribute('data-product-id') === selectedProductId) {
+                // Product exists, increment quantity instead of showing error
+                productExists = true;
+                const quantityField = row.querySelector('input[name$="].Quantity"]');
+                const currentQty = parseInt(quantityField.value) || 0;
+                const newQty = currentQty + quantity;
+                quantityField.value = newQty;
+
+                // Update the line total
+                updateLineTotal(quantityField);
                 break;
             }
         }
 
-        if (existingRow) {
-            // Update quantity and row total for existing product
-            const quantityInput = existingRow.querySelector('input[name$="].Quantity"]');
-            const currentQuantity = parseInt(quantityInput.value) || 0;
-            quantityInput.value = currentQuantity + quantity;
-            updateRowTotal(quantityInput);
-        } else {
-            // Create new row for the new product
-            const selectedProduct = products.find(p => p.Id == selectedProductId);
-            const currentIndex = productTableBody.children.length;
+        // If product doesn't exist, add new row
+        if (!productExists) {
+            // Create new index
+            const currentIndex = productTableBody.getElementsByTagName('tr').length;
 
+            // Create new row
             const row = document.createElement('tr');
+            row.setAttribute('data-product-id', selectedProductId);
+
             row.innerHTML = `
-                <td>${selectedProduct.Id}</td>
                 <td>
-                    <input type="hidden" name="OrderDetailRequest[${currentIndex}].ProductId" value="${selectedProduct.Id}" />
+                    <span class="product-name">${productName}</span>
+                    <input type="hidden" name="OrderDetailRequest[${currentIndex}].ProductId" value="${selectedProductId}" />
+                </td>
+                <td>
                     <input type="number" name="OrderDetailRequest[${currentIndex}].Quantity" value="${quantity}"
-                           onchange="updateRowTotal(this)" min="1" />
+                           class="form-control quantity-input" min="1" onchange="updateLineTotal(this)" />
                 </td>
                 <td>
-                    <input type="hidden" name="OrderDetailRequest[${currentIndex}].Price" value="${selectedProduct.Price}" />
-                    <span>${selectedProduct.Price}</span>
+                    <span class="price-display">$${formatCurrency(price * quantity)}</span>
+                    <input type="hidden" name="OrderDetailRequest[${currentIndex}].Price" value="${price}" />
                 </td>
                 <td>
-                    <span class="row-total">${(quantity * selectedProduct.Price).toFixed(2)}</span>
-                </td>
-                <td>
-                    <button type="button" class="btn btn-danger" onclick="removeProduct(this)">Remove</button>
+                    <button type="button" class="btn btn-danger" onclick="removeProduct('${selectedProductId}')">Remove</button>
                 </td>
             `;
+
             productTableBody.appendChild(row);
         }
 
-        // Clear inputs
-        productSelect.value = '';
-        quantityInput.value = '';
-
         // Update total price
         updateTotalPrice();
+
+        // Clear selections
+        productSelect.value = '';
+        $('#txtSearchProduct').val('');
+        quantityInput.value = '1';
+        priceInput.value = '';
     }
 
+    // Function to remove a product from the order
+    function removeProduct(productId) {
+        const productTableBody = document.getElementById('dgProducts');
+        const rows = productTableBody.getElementsByTagName('tr');
 
-    // Function to update row total when quantity changes
-    function updateRowTotal(quantityInput) {
-        const row = quantityInput.closest('tr');
-        const price = parseFloat(row.querySelector('input[name$="].Price"]').value);
-        const quantity = parseInt(quantityInput.value) || 0;
-        const totalSpan = row.querySelector('.row-total');
-        totalSpan.textContent = (price * quantity).toFixed(2);
-        updateTotalPrice();
-    }
-
-    // Updated removeProduct function
-    function removeProduct(button) {
-        const row = button.closest('tr');
-        const tbody = row.parentNode;
-        tbody.removeChild(row);
+        for (let i = 0; i < rows.length; i++) {
+            if (rows[i].getAttribute('data-product-id') === productId) {
+                productTableBody.removeChild(rows[i]);
+                break;
+            }
+        }
 
         // Reindex remaining rows
-        const rows = tbody.getElementsByTagName('tr');
-        for (let i = 0; i < rows.length; i++) {
-            const inputs = rows[i].getElementsByTagName('input');
+        const updatedRows = productTableBody.getElementsByTagName('tr');
+        for (let i = 0; i < updatedRows.length; i++) {
+            const inputs = updatedRows[i].getElementsByTagName('input');
             for (let input of inputs) {
                 const name = input.getAttribute('name');
                 if (name) {
-                    input.setAttribute('name', name.replace(/\[\d+\]/, `[${i}]`));
+                    const newName = name.replace(/\[\d+\]/, `[${i}]`);
+                    input.setAttribute('name', newName);
                 }
             }
         }
 
+        // Update total price
         updateTotalPrice();
+
+        // Reload product list to ensure it's not empty
+        loadProducts();
+
+        // Clear the search field to show all products
+        document.getElementById('txtSearchProduct').value = '';
     }
-
-    // Function to search for customers based on input
-    function searchCustomer() {
-        const searchValue = document.getElementById('txtCustomer').value.toLowerCase();
-        const customerSelect = document.getElementById('cmbCustomer');
-
-        // Filter customers based on search value
-        for (let i = 0; i < customerSelect.options.length; i++) {
-            const option = customerSelect.options[i];
-            option.style.display = option.text.toLowerCase().includes(searchValue) ? '' : 'none';
-        }
-    }
-
 
     // Function to update total price
     function updateTotalPrice() {
-        const rows = document.getElementById('dgProducts').getElementsByTagName('tr');
-        let total = 0;
+        const productTableBody = document.getElementById('dgProducts');
+        const rows = productTableBody.getElementsByTagName('tr');
+        let totalPrice = 0;
 
-        for (let row of rows) {
-            const quantity = parseInt(row.querySelector('input[name$="].Quantity"]').value) || 0;
-            const price = parseFloat(row.querySelector('input[name$="].Price"]').value) || 0;
-            total += quantity * price;
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const quantityInput = row.querySelector('input[type="number"]');
+            const priceInput = row.querySelector('input[name$="].Price"]');
+
+            if (quantityInput && priceInput) {
+                const quantity = parseInt(quantityInput.value) || 0;
+                const price = parseFloat(priceInput.value) || 0;
+                totalPrice += quantity * price;
+            }
         }
 
-        document.getElementById('txtTotalPrice').value = total.toFixed(2);
+        document.getElementById('txtTotalPrice').value = formatCurrency(totalPrice);
     }
 
     // Form validation before submit
     document.querySelector('form').addEventListener('submit', function (e) {
         const customerId = document.getElementById('cmbCustomer').value;
         const productsTable = document.getElementById('dgProducts');
-        const totalPrice = parseFloat(document.getElementById('txtTotalPrice').value) || 0;
+
+        // Get total price and remove currency formatting
+        let totalPriceStr = document.getElementById('txtTotalPrice').value;
+        totalPriceStr = totalPriceStr.replace(/[$,]/g, '');
+        const totalPrice = parseFloat(totalPriceStr) || 0;
 
         if (!customerId) {
             e.preventDefault();
