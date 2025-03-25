@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Newtonsoft.Json;
 using TechLap.API;
@@ -24,6 +24,8 @@ namespace TechLap.Razor.Pages.Order
         public List<ProductResponse>? Products { get; set; } = new List<ProductResponse>();
         public List<CustomerResponse>? Customers { get; set; } = new List<CustomerResponse>();
 
+        public string Token { get; set; } = string.Empty;
+
         public UpdateOrderModel(ILogger<UpdateOrderModel> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _logger = logger;
@@ -33,28 +35,72 @@ namespace TechLap.Razor.Pages.Order
 
         public async Task<IActionResult> OnGet(int id)
         {
+            Token = Request.Cookies["AuthToken"] ?? string.Empty;
+
             if (!await IsAuthorizedAsync())
             {
                 Response.Cookies.Delete("AuthToken");
                 return RedirectToPage("/Login/Index");
             }
 
-            Products = await LoadDataAsync<ProductResponse>("api/products");
             Customers = await LoadDataAsync<CustomerResponse>("api/customers");
 
-            var order = await LoadOrderByIdAsync(id);
-            if (order == null)
+            var orderResponse = await LoadOrderByIdAsync(id);
+            if (orderResponse == null)
             {
                 return NotFound();
             }
 
-            OrderRequest = order;
-            OrderDetailRequest = order.OrderDetails;
+            Order.Id = id;
+
+            OrderRequest = new OrderRequest(
+                orderResponse.OrderDate,
+                orderResponse.TotalPrice,
+                Enum.Parse<TechLap.API.Enums.PaymentMethod>(orderResponse.PaymentMethod),
+                Enum.Parse<TechLap.API.Enums.OrderStatus>(orderResponse.OrderStatus),
+                orderResponse.DiscountId,
+                orderResponse.OrderDetails.Select(od => new OrderDetailRequest(
+                    od.ProductId,
+                    od.Quantity,
+                    od.Price
+                )).ToList(),
+                orderResponse.CustomerId
+            );
+
+            OrderDetailRequest = orderResponse.OrderDetails
+                .Select(od => new OrderDetailRequest(
+                    od.ProductId,
+                    od.Quantity,
+                    od.Price
+                ))
+                .ToList();
+
+            var productIds = OrderDetailRequest.Select(od => od.ProductId).ToList();
+            if (productIds.Any())
+            {
+                try
+                {
+                    var allProducts = await LoadDataAsync<ProductResponse>("api/products");
+                    if (allProducts != null)
+                    {
+                        Products = allProducts.Where(p => productIds.Contains(p.Id)).ToList();
+                    }
+                    else
+                    {
+                        Products = new List<ProductResponse>();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error loading products for existing order");
+                    Products = new List<ProductResponse>();
+                }
+            }
 
             return Page();
         }
 
-        private async Task<OrderRequest?> LoadOrderByIdAsync(int id)
+        private async Task<OrderResponse?> LoadOrderByIdAsync(int id)
         {
             var token = Request.Cookies["AuthToken"];
             var client = _httpClientFactory.CreateClient();
@@ -66,8 +112,7 @@ namespace TechLap.Razor.Pages.Order
             if (response.IsSuccessStatusCode)
             {
                 var responseBody = await response.Content.ReadAsStringAsync();
-                var apiResponse = JsonConvert.DeserializeObject<ApiResponse<OrderRequest>>(responseBody);
-
+                var apiResponse = JsonConvert.DeserializeObject<ApiResponse<OrderResponse>>(responseBody);
                 return apiResponse?.Data;
             }
             else
@@ -131,7 +176,7 @@ namespace TechLap.Razor.Pages.Order
                 _logger.LogError($"API Error: {errorContent}");
                 ModelState.AddModelError(string.Empty, $"Error occurred while updating the order: {errorContent}");
 
-                Products = await LoadDataAsync<ProductResponse>("api/products");
+                Token = Request.Cookies["AuthToken"] ?? string.Empty;
                 Customers = await LoadDataAsync<CustomerResponse>("api/customers");
                 return Page();
             }
@@ -140,7 +185,7 @@ namespace TechLap.Razor.Pages.Order
                 _logger.LogError(ex, "Error occurred while processing order update");
                 ModelState.AddModelError(string.Empty, "An unexpected error occurred while processing your request.");
 
-                Products = await LoadDataAsync<ProductResponse>("api/products");
+                Token = Request.Cookies["AuthToken"] ?? string.Empty;
                 Customers = await LoadDataAsync<CustomerResponse>("api/customers");
                 return Page();
             }
@@ -192,9 +237,24 @@ namespace TechLap.Razor.Pages.Order
             if (response.IsSuccessStatusCode)
             {
                 var responseBody = await response.Content.ReadAsStringAsync();
-                var apiResponse = JsonConvert.DeserializeObject<ApiResponse<List<T>>>(responseBody);
 
-                return apiResponse?.Data;
+                try
+                {
+                    if (responseBody.StartsWith("[") && responseBody.EndsWith("]"))
+                    {
+                        return JsonConvert.DeserializeObject<List<T>>(responseBody);
+                    }
+                    else
+                    {
+                        var apiResponse = JsonConvert.DeserializeObject<ApiResponse<List<T>>>(responseBody);
+                        return apiResponse?.Data;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error deserializing response from {Endpoint}", endpoint);
+                    return null;
+                }
             }
             else
             {

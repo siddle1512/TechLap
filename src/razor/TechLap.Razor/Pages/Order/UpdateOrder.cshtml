@@ -6,6 +6,94 @@
 
 <head>
     <link href="~/css/update-order.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .product-search-container, .customer-search-container {
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .search-indicator {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Style for custom dropdown */
+        .custom-dropdown {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            z-index: 1000;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            display: none;
+        }
+
+            .dropdown-menu.show {
+                display: block;
+            }
+
+        .dropdown-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+            .dropdown-item:hover {
+                background-color: #f8f9fa;
+            }
+
+        /* Hidden original select */
+        .hidden-select {
+            display: none;
+        }
+
+        /* Quantity input styling */
+        .quantity-input {
+            width: 80px;
+            text-align: center;
+        }
+
+        /* Price formatting */
+        .price-display {
+            font-family: monospace;
+        }
+
+        /* Table styling */
+        .cart-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            .cart-table th {
+                background-color: #f5f5f5;
+                padding: 8px;
+                text-align: left;
+            }
+
+            .cart-table td {
+                padding: 8px;
+                border-bottom: 1px solid #eee;
+            }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+    </style>
 </head>
 
 <div class="container formOrder">
@@ -13,23 +101,31 @@
         <h2 style="margin-left: 13px;">Update Order</h2>
         <form method="post" enctype="multipart/form-data">
             <div asp-validation-summary="All" class="text-danger"></div>
+            <input type="hidden" name="Order.Id" value="@Model.Order.Id" />
+
             <!-- Left Panel -->
             <div class="col-md-6">
                 <h5>Select Product</h5>
-                <input type="text" id="txtSearchProduct" class="form-control" placeholder="Search product..." onchange="searchProduct()" />
-                <select id="cmbProduct" class="form-select" onchange="productSelectionChanged()">
-                    <option value="">Select product</option>
-                    @foreach (var product in Model.Products)
-                    {
-                        <option value="@product.Id">@product.Model</option>
-                    }
-                </select>
+                <div class="product-search-container custom-dropdown">
+                    <input type="text" id="txtSearchProduct" class="form-control" placeholder="Search product..." autocomplete="off" />
+                    <div class="search-indicator" id="searchIndicator" style="display:none;">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    </div>
+                    <!-- Custom dropdown menu that will contain product options -->
+                    <ul id="productDropdownMenu" class="dropdown-menu">
+                        <li class="dropdown-item" data-value="">Select product</li>
+                    </ul>
+                    <!-- Keep the original select for form data but hide it -->
+                    <select id="cmbProduct" class="form-select hidden-select" onchange="productSelectionChanged()">
+                        <option value="">Select product</option>
+                    </select>
+                </div>
                 <label class="mt-3">Quantity</label>
-                <input type="number" id="txtQuantity" class="form-control" onchange="quantityChanged()" />
+                <input type="number" id="txtQuantity" class="form-control" value="1" min="1" />
                 <label class="mt-3">Price</label>
                 <input type="text" id="txtPrice" class="form-control" readonly disabled />
                 <button id="btnAddProduct" type="button" class="btn btn-primary mt-2" onclick="addProduct()">Add Product</button>
-                <table class="table mt-3">
+                <table class="table mt-3 cart-table">
                     <thead>
                         <tr>
                             <th>Product</th>
@@ -42,16 +138,18 @@
                         @for (int i = 0; i < Model.OrderDetailRequest.Count; i++)
                         {
                             var product = Model.Products.FirstOrDefault(p => p.Id == Model.OrderDetailRequest[i].ProductId);
-                            <tr>
-                                <td>@product?.Model</td>
+                            <tr data-product-id="@Model.OrderDetailRequest[i].ProductId">
                                 <td>
+                                    <span class="product-name">@(product?.Brand) @(product?.Model)</span>
                                     <input type="hidden" name="OrderDetailRequest[@i].ProductId" value="@Model.OrderDetailRequest[i].ProductId" />
+                                </td>
+                                <td>
                                     <input type="number" name="OrderDetailRequest[@i].Quantity" value="@Model.OrderDetailRequest[i].Quantity"
-                                           onchange="updateRowTotal(this)" min="1" class="form-control" readonly />
+                                           class="form-control quantity-input" min="1" onchange="updateLineTotal(this)" />
                                     <input type="hidden" name="OrderDetailRequest[@i].Price" value="@Model.OrderDetailRequest[i].Price" />
                                 </td>
-                                <td class="row-total">
-                                    @((Model.OrderDetailRequest[i].Price).ToString("N2"))
+                                <td>
+                                    <span class="price-display">$@((Model.OrderDetailRequest[i].Price * Model.OrderDetailRequest[i].Quantity).ToString("N2"))</span>
                                 </td>
                                 <td>
                                     <button type="button" class="btn btn-danger" onclick="removeProduct('@Model.OrderDetailRequest[i].ProductId')">Remove</button>
@@ -65,16 +163,32 @@
             <!-- Right Panel -->
             <div class="col-md-6">
                 <h5>Select Customer</h5>
-                <input type="text" id="txtCustomer" class="form-control" placeholder="Search customer..." onchange="searchCustomer()" />
-                <select id="cmbCustomer" name="OrderRequest.CustomerId" class="form-select" asp-for="OrderRequest.CustomerId">
-                    <option value="">Select customer</option>
-                    @foreach (var customer in Model.Customers)
-                    {
-                        <option value="@customer.Id">@customer.Name</option>
-                    }
-                </select>
+                <div class="customer-search-container custom-dropdown">
+                    <input type="text" id="txtCustomer" class="form-control" placeholder="Search customer..." autocomplete="off" />
+                    <div class="search-indicator" id="customerSearchIndicator" style="display:none;">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    </div>
+                    <!-- Custom dropdown menu for customers -->
+                    <ul id="customerDropdownMenu" class="dropdown-menu">
+                        <li class="dropdown-item" data-value="">Select customer</li>
+                        @foreach (var customer in Model.Customers)
+                        {
+                            <li class="dropdown-item" data-value="@customer.Id">@customer.Name</li>
+                        }
+                    </ul>
+                    <!-- Hidden select for form submission -->
+                    <select id="cmbCustomer" name="OrderRequest.CustomerId" class="form-select hidden-select" asp-for="OrderRequest.CustomerId">
+                        <option value="">Select customer</option>
+                        @foreach (var customer in Model.Customers)
+                        {
+                            <option value="@customer.Id">@customer.Name</option>
+                        }
+                    </select>
+                </div>
+
                 <label class="mt-3">Order Date</label>
                 <input asp-for="OrderRequest.OrderDate" type="date" value="@Model.OrderRequest.OrderDate.ToString("yyyy-MM-dd")" id="txtOrderDate" class="form-control" readonly />
+
                 <label class="mt-3">Payment Method</label>
                 <select asp-for="OrderRequest.Payment" id="cmbPaymentMethod" class="form-select">
                     @foreach (var paymentMethod in Enum.GetValues(typeof(TechLap.API.Enums.PaymentMethod)))
@@ -82,6 +196,7 @@
                         <option value="@paymentMethod">@paymentMethod</option>
                     }
                 </select>
+
                 <label class="mt-3">Order Status</label>
                 <select asp-for="OrderRequest.Status" id="cmbOrderStatus" class="form-select">
                     @foreach (var orderStatus in Enum.GetValues(typeof(TechLap.API.Enums.OrderStatus)))
@@ -89,10 +204,16 @@
                         <option value="@orderStatus">@orderStatus</option>
                     }
                 </select>
+
                 <label class="mt-3">Discount Code</label>
                 <input asp-for="OrderRequest.DiscountId" type="text" id="txtDiscountCode" class="form-control" />
+
                 <label class="mt-3">Total Price</label>
-                <input asp-for="OrderRequest.TotalPrice" type="text" id="txtTotalPrice" class="form-control" style="margin-bottom: 10px;" readonly />
+                <div class="input-group" style="display: flex;">
+                    <span class="input-group-text">$</span>
+                    <input asp-for="OrderRequest.TotalPrice" type="text" id="txtTotalPrice" class="form-control price-display" style="margin-bottom: 10px; margin-left: 5px;" readonly />
+                </div>
+
                 <button type="submit" id="btnSave" class="btn btn-success mt-2">Save</button>
                 <a role="button" href="/Order" id="btnCancel" class="btn btn-outline-primary mt-2">Cancel</a>
             </div>
@@ -101,31 +222,340 @@
 </div>
 
 <script>
-    const products = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Products));
+    $(document).ready(function () {
+        loadProducts();
+        setupCustomDropdowns();
+
+        const customerId = '@Model.OrderRequest.CustomerId';
+        if (customerId) {
+            const customerName = $('#cmbCustomer option[value="' + customerId + '"]').text();
+            $('#txtCustomer').val(customerName);
+        }
+
+        // Add event listener for product search input
+        let searchTimeout;
+        $('#txtSearchProduct').on('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function() {
+                searchProduct();
+            }, 500);
+        });
+
+        // Add event listener for customer search input
+        let customerSearchTimeout;
+        $('#txtCustomer').on('input', function() {
+            clearTimeout(customerSearchTimeout);
+            customerSearchTimeout = setTimeout(function() {
+                searchCustomer();
+            }, 300);
+        });
+
+        // Focus behavior for search inputs
+        $('#txtSearchProduct').on('focus', function() {
+            $('#productDropdownMenu').addClass('show');
+        });
+        $('#txtCustomer').on('focus', function() {
+            $('#customerDropdownMenu').addClass('show');
+        });
+
+        // Close dropdowns when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.product-search-container').length) {
+                $('#productDropdownMenu').removeClass('show');
+            }
+            if (!$(e.target).closest('.customer-search-container').length) {
+                $('#customerDropdownMenu').removeClass('show');
+            }
+        });
+
+        // Prevent dropdowns from closing when clicking inside
+        $('#txtSearchProduct').on('click', function(e) {
+            e.stopPropagation();
+            $('#productDropdownMenu').addClass('show');
+        });
+
+        $('#txtCustomer').on('click', function(e) {
+            e.stopPropagation();
+            $('#customerDropdownMenu').addClass('show');
+        });
+
+        formatAllPrices();
+        updateTotalPrice();
+    });
+
+    const apiBaseUrl = "https://localhost:7097";
+    window.products = [];
+    const authToken = '@Model.Token';
+
+    // Format a number as currency
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value);
+    }
+
+    // Format all price displays in the page
+    function formatAllPrices() {
+        const totalPriceInput = document.getElementById('txtTotalPrice');
+        if (totalPriceInput.value) {
+            totalPriceInput.value = formatCurrency(parseFloat(totalPriceInput.value));
+        }
+
+        const priceDisplays = document.querySelectorAll('.price-display');
+        priceDisplays.forEach(display => {
+            if (display.tagName === 'INPUT') {
+                if (display.value) {
+                    display.value = formatCurrency(parseFloat(display.value));
+                }
+            } else {
+                const text = display.textContent;
+                if (text && !text.startsWith('$')) {
+                    display.textContent = '$' + formatCurrency(parseFloat(text.replace('$', '')));
+                }
+            }
+        });
+    }
+
+    // Setup custom dropdowns functionality
+    function setupCustomDropdowns() {
+        $(document).on('click', '#productDropdownMenu .dropdown-item', function() {
+            const value = $(this).data('value');
+            const text = $(this).text();
+            const price = $(this).data('price');
+
+            $('#txtSearchProduct').val(text);
+
+            $('#cmbProduct').val(value);
+
+            $('#txtQuantity').val(1);
+
+            const event = new Event('change');
+            document.getElementById('cmbProduct').dispatchEvent(event);
+
+            if (price) {
+                $('#txtPrice').val('$' + formatCurrency(parseFloat(price)));
+            }
+
+            $('#productDropdownMenu').removeClass('show');
+        });
+
+        $(document).on('click', '#customerDropdownMenu .dropdown-item', function() {
+            const value = $(this).data('value');
+            const text = $(this).text();
+
+            $('#txtCustomer').val(text);
+            $('#cmbCustomer').val(value);
+            $('#customerDropdownMenu').removeClass('show');
+        });
+    }
+
+    function showSearchIndicator(elementId, show) {
+        document.getElementById(elementId).style.display = show ? 'block' : 'none';
+    }
+
+    function loadProducts() {
+        showSearchIndicator('searchIndicator', true);
+
+        $.ajax({
+            url: `${apiBaseUrl}/api/products?$orderby=Id desc&$top=5`,
+            method: "GET",
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            },
+            success: function (response) {
+                const productSelect = document.getElementById('cmbProduct');
+                productSelect.innerHTML = '<option value="">Select product</option>';
+
+                const dropdownMenu = document.getElementById('productDropdownMenu');
+                dropdownMenu.innerHTML = '<li class="dropdown-item" data-value="">Select product</li>';
+
+                let productList = response;
+
+                if (response.value) {
+                    productList = response.value;
+                } else if (response.Data) {
+                    productList = response.Data;
+                }
+
+                window.products = productList;
+
+                if (Array.isArray(productList) && productList.length > 0) {
+                    productList.forEach(product => {
+                        const option = document.createElement('option');
+                        const productId = product.id || product.Id;
+                        const productModel = product.model || product.Model;
+                        const productBrand = product.brand || product.Brand || '';
+                        const productPrice = product.price || product.Price;
+
+                        option.value = productId;
+                        option.text = `${productBrand} ${productModel}`;
+                        option.dataset.price = productPrice;
+                        productSelect.appendChild(option);
+
+                        const dropdownItem = document.createElement('li');
+                        dropdownItem.className = 'dropdown-item';
+                        dropdownItem.textContent = `${productBrand} ${productModel}`;
+                        dropdownItem.dataset.value = productId;
+                        dropdownItem.dataset.price = productPrice;
+                        dropdownItem.dataset.name = `${productBrand} ${productModel}`;
+                        dropdownMenu.appendChild(dropdownItem);
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("Error loading products:", error);
+            },
+            complete: function() {
+                showSearchIndicator('searchIndicator', false);
+            }
+        });
+    }
 
     function searchProduct() {
         const searchValue = document.getElementById('txtSearchProduct').value.toLowerCase();
-        const productSelect = document.getElementById('cmbProduct');
 
-        for (let i = 0; i < productSelect.options.length; i++) {
-            const option = productSelect.options[i];
-            option.style.display = option.text.toLowerCase().includes(searchValue) ? '' : 'none';
+        // Don't search if string is too short
+        if (searchValue.length < 2) {
+            return;
+        }
+
+        showSearchIndicator('searchIndicator', true);
+        $('#productDropdownMenu').addClass('show');
+
+        $.ajax({
+            url: `${apiBaseUrl}/api/products?$filter=contains(tolower(Model),'${searchValue}') or contains(tolower(Brand),'${searchValue}')&$top=5`,
+            method: "GET",
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            },
+            success: function (response) {
+                const productSelect = document.getElementById('cmbProduct');
+                productSelect.innerHTML = '<option value="">Select product</option>';
+
+                const dropdownMenu = document.getElementById('productDropdownMenu');
+                dropdownMenu.innerHTML = '<li class="dropdown-item" data-value="">Select product</li>';
+
+                let productList = response;
+
+                if (response.value) {
+                    productList = response.value;
+                } else if (response.Data) {
+                    productList = response.Data;
+                }
+
+                if (Array.isArray(productList) && productList.length > 0) {
+                    productList.forEach(product => {
+                        const option = document.createElement('option');
+                        const productId = product.id || product.Id;
+                        const productModel = product.model || product.Model;
+                        const productBrand = product.brand || product.Brand || '';
+                        const productPrice = product.price || product.Price;
+
+                        option.value = productId;
+                        option.text = `${productBrand} ${productModel}`;
+                        option.dataset.price = productPrice;
+                        productSelect.appendChild(option);
+
+                        const dropdownItem = document.createElement('li');
+                        dropdownItem.className = 'dropdown-item';
+                        dropdownItem.textContent = `${productBrand} ${productModel}`;
+                        dropdownItem.dataset.value = productId;
+                        dropdownItem.dataset.price = productPrice;
+                        dropdownItem.dataset.name = `${productBrand} ${productModel}`;
+                        dropdownMenu.appendChild(dropdownItem);
+                    });
+                } else {
+                    dropdownMenu.innerHTML = '<li class="dropdown-item" data-value="">No products found</li>';
+
+                    setTimeout(() => {
+                        loadProducts();
+                    }, 2000);
+                }
+            },
+            error: function (xhr, status, error) {
+                const dropdownMenu = document.getElementById('productDropdownMenu');
+                dropdownMenu.innerHTML = '<li class="dropdown-item" data-value="">Error loading products</li>';
+
+                    setTimeout(() => {
+                        loadProducts();
+                    }, 2000);
+            },
+            complete: function() {
+                showSearchIndicator('searchIndicator', false);
+            }
+        });
+    }
+
+    // Function to search for customers based on input
+    function searchCustomer() {
+        const searchValue = document.getElementById('txtCustomer').value.toLowerCase();
+        if (searchValue.length < 1) return;
+
+        $('#customerDropdownMenu').addClass('show');
+        showSearchIndicator('customerSearchIndicator', true);
+
+        const dropdownItems = document.querySelectorAll('#customerDropdownMenu .dropdown-item');
+        let found = false;
+
+        dropdownItems.forEach(item => {
+            if (item.dataset.value === '') return;
+
+            const customerName = item.textContent.toLowerCase();
+            const visible = customerName.includes(searchValue);
+            item.style.display = visible ? '' : 'none';
+
+            if (visible) found = true;
+        });
+
+        showSearchIndicator('customerSearchIndicator', false);
+
+        if (!found) {
+            const noResultItem = document.createElement('li');
+            noResultItem.className = 'dropdown-item';
+            noResultItem.textContent = 'No matching customers';
+            noResultItem.dataset.value = '';
+
+            dropdownItems.forEach(item => {
+                if (item.textContent === 'No matching customers') {
+                    item.remove();
+                }
+            });
+
+            document.getElementById('customerDropdownMenu').appendChild(noResultItem);
         }
     }
 
     function productSelectionChanged() {
         const productSelect = document.getElementById('cmbProduct');
         const selectedProductId = productSelect.value;
-        const selectedProduct = products.find(p => p.Id == selectedProductId);
-        const priceInput = document.getElementById('txtPrice');
 
-        priceInput.value = selectedProduct ? selectedProduct.Price.toFixed(2) : '';
+        if (!selectedProductId) {
+            document.getElementById('txtPrice').value = '';
+            return;
+        }
+
+        let selectedProduct = window.products.find(p => p.Id == selectedProductId || p.id == selectedProductId);
+
+        if (!selectedProduct) {
+            const selectedOption = productSelect.selectedOptions[0];
+            const price = selectedOption.dataset.price;
+            if (price) {
+                document.getElementById('txtPrice').value = '$' + formatCurrency(parseFloat(price));
+            } else {
+                document.getElementById('txtPrice').value = '';
+            }
+            return;
+        }
+
+        document.getElementById('txtPrice').value = '$' + formatCurrency(parseFloat(selectedProduct.Price || selectedProduct.price));
     }
 
     function addProduct() {
         const productSelect = document.getElementById('cmbProduct');
         const selectedProductId = productSelect.value;
         const quantityInput = document.getElementById('txtQuantity');
+        const priceInput = document.getElementById('txtPrice');
 
         if (!selectedProductId) {
             alert('Please select a product');
@@ -138,61 +568,94 @@
             return;
         }
 
-        const selectedProduct = products.find(p => p.Id == selectedProductId);
-        const productTableBody = document.getElementById('dgProducts');
-        let existingRow = null;
+        let price = priceInput.value;
+        if (price.startsWith('$')) {
+            price = price.substring(1);
+        }
+        price = parseFloat(price.replace(/,/g, '')) || 0;
 
-        // Check if product already exists
-        for (let row of productTableBody.getElementsByTagName('tr')) {
-            const productIdInput = row.querySelector('input[name$="].ProductId"]');
-            if (productIdInput && productIdInput.value === selectedProductId) {
+        if (price <= 0) {
+            alert('Invalid price');
+            return;
+        }
+
+        let productName = "";
+        const selectedOption = productSelect.selectedOptions[0];
+        if (selectedOption) {
+            productName = selectedOption.text;
+        } else {
+            const product = window.products.find(p => p.Id == selectedProductId || p.id == selectedProductId);
+            if (product) {
+                const brand = product.Brand || product.brand || '';
+                const model = product.Model || product.model || '';
+                productName = `${brand} ${model}`;
+            } else {
+                productName = `Product ${selectedProductId}`;
+            }
+        }
+
+        const productTableBody = document.getElementById('dgProducts');
+
+        let existingRow = null;
+        const rows = productTableBody.getElementsByTagName('tr');
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            if (row.getAttribute('data-product-id') === selectedProductId) {
                 existingRow = row;
                 break;
             }
         }
 
         if (existingRow) {
-            // Update quantity for existing product
-            const quantityInput = existingRow.querySelector('input[name$="].Quantity"]');
-            const currentQuantity = parseInt(quantityInput.value) || 0;
-            quantityInput.value = currentQuantity + quantity;
-            updateRowTotal(quantityInput);
+            const quantityField = existingRow.querySelector('input[name$="].Quantity"]');
+            const currentQty = parseInt(quantityField.value) || 0;
+            const newQty = currentQty + quantity;
+            quantityField.value = newQty;
+
+            updateLineTotal(quantityField);
         } else {
-            // Add new product row
-            const currentIndex = productTableBody.children.length;
+            const currentIndex = productTableBody.getElementsByTagName('tr').length;
             const row = document.createElement('tr');
+            row.setAttribute('data-product-id', selectedProductId);
+
             row.innerHTML = `
-                    <td>${selectedProduct.Model}</td>
-                    <td>
-                        <input type="hidden" name="OrderDetailRequest[${currentIndex}].ProductId" value="${selectedProduct.Id}" />
-                        <input type="number" name="OrderDetailRequest[${currentIndex}].Quantity" value="${quantity}"
-                               onchange="updateRowTotal(this)" min="1" class="form-control" />
-                        <input type="hidden" name="OrderDetailRequest[${currentIndex}].Price" value="${selectedProduct.Price}" />
-                    </td>
-                    <td class="row-total">
-                        ${(quantity * selectedProduct.Price).toFixed(2)}
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-danger" onclick="removeProduct('${selectedProduct.Id}')">Remove</button>
-                    </td>
-                `;
+                <td>
+                    <span class="product-name">${productName}</span>
+                    <input type="hidden" name="OrderDetailRequest[${currentIndex}].ProductId" value="${selectedProductId}" />
+                </td>
+                <td>
+                    <input type="number" name="OrderDetailRequest[${currentIndex}].Quantity" value="${quantity}"
+                           class="form-control quantity-input" min="1" onchange="updateLineTotal(this)" />
+                    <input type="hidden" name="OrderDetailRequest[${currentIndex}].Price" value="${price}" />
+                </td>
+                <td>
+                    <span class="price-display">$${formatCurrency(price * quantity)}</span>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger" onclick="removeProduct('${selectedProductId}')">Remove</button>
+                </td>
+            `;
+
             productTableBody.appendChild(row);
         }
 
-        // Clear inputs
         productSelect.value = '';
-        quantityInput.value = '';
-        document.getElementById('txtPrice').value = '';
+        $('#txtSearchProduct').val('');
+        quantityInput.value = '1';
+        priceInput.value = '';
 
         updateTotalPrice();
     }
 
-    function updateRowTotal(quantityInput) {
+    function updateLineTotal(quantityInput) {
         const row = quantityInput.closest('tr');
-        const price = parseFloat(row.querySelector('input[name$="].Price"]').value);
+        const priceInput = row.querySelector('input[name$="].Price"]');
+        const price = parseFloat(priceInput.value) || 0;
         const quantity = parseInt(quantityInput.value) || 0;
-        const totalCell = row.querySelector('.row-total');
-        totalCell.textContent = (price * quantity).toFixed(2);
+        const totalCell = row.querySelector('.price-display');
+
+        totalCell.textContent = '$' + formatCurrency(price * quantity);
+
         updateTotalPrice();
     }
 
@@ -202,22 +665,20 @@
 
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
-            const productIdInput = row.querySelector('input[name$="].ProductId"]');
-
-            if (productIdInput && productIdInput.value === productId) {
+            if (row.getAttribute('data-product-id') === productId) {
                 productTableBody.removeChild(row);
                 break;
             }
         }
 
-        // Reindex remaining rows
         const remainingRows = productTableBody.getElementsByTagName('tr');
         for (let i = 0; i < remainingRows.length; i++) {
             const inputs = remainingRows[i].getElementsByTagName('input');
             for (let input of inputs) {
                 const name = input.getAttribute('name');
                 if (name) {
-                    input.setAttribute('name', name.replace(/\[\d+\]/, `[${i}]`));
+                    const newName = name.replace(/\[\d+\]/, `[${i}]`);
+                    input.setAttribute('name', newName);
                 }
             }
         }
@@ -235,24 +696,17 @@
             total += quantity * price;
         }
 
-        document.getElementById('txtTotalPrice').value = total.toFixed(2);
+        document.getElementById('txtTotalPrice').value = formatCurrency(total);
     }
 
-    function searchCustomer() {
-        const searchValue = document.getElementById('txtCustomer').value.toLowerCase();
-        const customerSelect = document.getElementById('cmbCustomer');
-
-        for (let i = 0; i < customerSelect.options.length; i++) {
-            const option = customerSelect.options[i];
-            option.style.display = option.text.toLowerCase().includes(searchValue) ? '' : 'none';
-        }
-    }
-
-    // Form validation
+    // Form validation before submit
     document.querySelector('form').addEventListener('submit', function (e) {
         const customerId = document.getElementById('cmbCustomer').value;
         const productsTable = document.getElementById('dgProducts');
-        const totalPrice = parseFloat(document.getElementById('txtTotalPrice').value) || 0;
+
+        let totalPriceStr = document.getElementById('txtTotalPrice').value;
+        totalPriceStr = totalPriceStr.replace(/[$,]/g, '');
+        const totalPrice = parseFloat(totalPriceStr) || 0;
 
         if (!customerId) {
             e.preventDefault();
