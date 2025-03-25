@@ -19,25 +19,26 @@ namespace TechLap.API.Controllers
         {
             _discountRepository = discountRepository;
         }
-       
-        [Authorize(Roles = "Admin,User")]
+
         [HttpGet]
+        [Authorize(Roles = "Admin,User")]
         [EnableQuery]
         public async Task<IActionResult> GetDiscounts()
         {
-            
-            var discounts = await _discountRepository.GetAllAsync(d => true);
-            var response = LazyMapper.Mapper.Map<IEnumerable<GetAdminDiscountRespones>>(discounts);
-
+            // Đối với OData queries
             if (Request.QueryString.HasValue && Request.QueryString.Value.Contains("$"))
             {
+                var discounts = await _discountRepository.GetAllAsync(d => true);
+                var response = LazyMapper.Mapper.Map<IEnumerable<GetAdminDiscountRespones>>(discounts);
                 return Ok(response.AsQueryable());
             }
 
-            return CreateResponse(true, "Request processed successfully.", HttpStatusCode.OK, response);
-    
+            // Đối với non-OData queries
+            var allDiscounts = await _discountRepository.GetAllAsync(d => true);
+            var allResponse = LazyMapper.Mapper.Map<IEnumerable<GetAdminDiscountRespones>>(allDiscounts);
+            return CreateResponse<IEnumerable<GetAdminDiscountRespones>>(true, "Request processed successfully.", HttpStatusCode.OK, allResponse);
         }
-        
+
         [Authorize(Roles = "User")]
         [HttpPost]
         [Route("create")]

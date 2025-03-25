@@ -12,10 +12,9 @@ using TechLap.API.Services.Repositories.IRepositories;
 namespace TechLap.API.Controllers
 {
     [ApiController]
-    [Route("odata/[controller]")]
     public class ProductController : BaseController<ProductController>
     {
-        private IProductRepository _productRepository;
+        private readonly IProductRepository _productRepository;
 
         public ProductController(IProductRepository productRepository)
         {
@@ -38,10 +37,18 @@ namespace TechLap.API.Controllers
 
         public async Task<IActionResult> GetAllProducts()
         {
-            var products = await _productRepository.GetAllAsync(p => true);
-            var response = LazyMapper.Mapper.Map<IEnumerable<ProductResponse>>(products);
-            //return CreateResponse<IEnumerable<ProductResponse>>(true, "Request processed successfully.", HttpStatusCode.OK, response);
-            return Ok(response);
+            // Đối với OData queries
+            if (Request.QueryString.HasValue && Request.QueryString.Value.Contains("$"))
+            {
+                var products = await _productRepository.GetAllAsync(p => true);
+                var response = LazyMapper.Mapper.Map<IEnumerable<ProductResponse>>(products);
+                return Ok(response.AsQueryable());
+            }
+
+            // Đối với non-OData queries
+            var allProducts = await _productRepository.GetAllAsync(p => true);
+            var allResponse = LazyMapper.Mapper.Map<IEnumerable<ProductResponse>>(allProducts);
+            return CreateResponse<IEnumerable<ProductResponse>>(true, "Request processed successfully.", HttpStatusCode.OK, allResponse);
         }
 
         [HttpGet]
@@ -85,8 +92,9 @@ namespace TechLap.API.Controllers
             return CreateResponse<int>(true, "Product updated successfully.", HttpStatusCode.OK, response.Id);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete]
         [Authorize(Roles = "User, Admin")]
+        [Route("/api/products/{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var existingProduct = await _productRepository.GetByIdAsync(id);
@@ -97,12 +105,12 @@ namespace TechLap.API.Controllers
 
             await _productRepository.DeleteAsync(existingProduct);
 
-            return CreateResponse<string>(true, "Request processed successfully.", HttpStatusCode.OK);
+            return CreateResponse<string>(true, "Product deleted successfully.", HttpStatusCode.OK);
         }
 
         [HttpPost]
         [Authorize(Roles = "User")]
-        [Route("searchConfiguration")]
+        [Route("/api/products/searchConfiguration")]
         public async Task<IActionResult> GetProductsConfiguration(SearchProductsRequest request)
         {
             var products = await _productRepository.SearchProductsAsync(request);

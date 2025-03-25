@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Newtonsoft.Json;
-using TechLap.API;
-using TechLap.API.DTOs.Responses.OrderDTOs;
 
 namespace TechLap.Razor.Pages.Order
 {
@@ -12,7 +9,8 @@ namespace TechLap.Razor.Pages.Order
         private readonly ILogger<IndexModel> _logger;
         private readonly IConfiguration _configuration;
 
-        public List<OrderResponse>? Orders { get; set; }
+        public string ApiEndpoint { get; private set; } = string.Empty;
+        public string AuthToken { get; private set; } = string.Empty;
 
         public IndexModel(ILogger<IndexModel> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
@@ -23,20 +21,28 @@ namespace TechLap.Razor.Pages.Order
 
         public async Task<IActionResult> OnGet()
         {
-            if (!await IsAuthorizedAsync())
+            var token = Request.Cookies["AuthToken"];
+            if (string.IsNullOrEmpty(token))
             {
                 Response.Cookies.Delete("AuthToken");
                 return RedirectToPage("/Login/Index");
             }
 
-            Orders = await LoadDataAsync<OrderResponse>("api/orders");
+            if (!await IsAuthorizedAsync(token))
+            {
+                Response.Cookies.Delete("AuthToken");
+                return RedirectToPage("/Login/Index");
+            }
+
+            AuthToken = token;
+
+            ApiEndpoint = _configuration["ApiEndPoint"] ?? string.Empty;
 
             return Page();
         }
 
-        private async Task<bool> IsAuthorizedAsync()
+        private async Task<bool> IsAuthorizedAsync(string token)
         {
-            var token = Request.Cookies["AuthToken"];
             if (string.IsNullOrEmpty(token))
             {
                 _logger.LogWarning("Token is missing in the request.");
@@ -66,29 +72,6 @@ namespace TechLap.Razor.Pages.Order
             }
 
             return false;
-        }
-
-        private async Task<List<T>?> LoadDataAsync<T>(string endpoint)
-        {
-            var token = Request.Cookies["AuthToken"];
-            var client = _httpClientFactory.CreateClient();
-            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-            string? apiEndpoint = _configuration["ApiEndPoint"];
-
-            var response = await client.GetAsync($"{apiEndpoint}/{endpoint}");
-
-            if (response.IsSuccessStatusCode)
-            {
-                var responseBody = await response.Content.ReadAsStringAsync();
-                var apiResponse = JsonConvert.DeserializeObject<ApiResponse<List<T>>>(responseBody);
-
-                return apiResponse?.Data;
-            }
-            else
-            {
-                _logger.LogError("API call to {Endpoint} failed with status code: {StatusCode}", endpoint, response.StatusCode);
-                return null;
-            }
         }
     }
 }

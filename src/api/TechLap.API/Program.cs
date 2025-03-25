@@ -25,15 +25,14 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 JwtConfig.SetSecret(jwtSettings);
 
-builder.Services.AddControllers().AddOData(cfg =>
+builder.Services.AddControllers(options =>
 {
-    //cfg.Filters.Add(typeof(ExceptionFilter));
-    var build = new ODataConventionModelBuilder();
-    build.EntitySet<Product>("Products");
-    build.EntitySet<Category>("Categories");
-
-    cfg.Select().Filter().Count().OrderBy().Expand().SetMaxTop(null)
-        .AddRouteComponents("odata", build.GetEdmModel());
+    options.Filters.Add(typeof(ExceptionFilter));
+})
+.AddOData(options =>
+{
+    options.Select().Filter().Count().OrderBy().Expand();
+    options.EnableQueryFeatures(100);
 });
 
 //Validatior

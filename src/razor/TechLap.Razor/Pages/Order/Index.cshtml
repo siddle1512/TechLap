@@ -25,7 +25,7 @@
                     </div>
                 </div>
             </div>
-            <table class="table table-striped table-hover" id="table1">
+            <table class="table table-striped table-hover" id="orderTable">
                 <thead>
                     <tr>
                         <th>
@@ -42,133 +42,278 @@
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @if (Model.Orders != null && Model.Orders.Any())
-                    {
-                        @foreach (var order in Model.Orders)
-                        {
-                            <tr>
-                                <td>
-                                    <span class="custom-checkbox">
-                                        <input type="checkbox" id="checkbox{@order.Id}" name="options[]" value="{@order.Id}">
-                                        <label for="checkbox{@order.Id}"></label>
-                                    </span>
-                                </td>
-                                <td>@order.Customer.Name</td>
-                                <td>@order.PaymentMethod</td>
-                                <td>@order.OrderStatus</td>
-                                <td>@order.TotalPrice</td>
-                                <td>@order.OrderDate.ToString("yyyy-MM-dd")</td>
-                                <td>
-                                    <a href="/Order/UpdateOrder/@order.Id" class="edit" data-toggle="modal">
-                                        <i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i>
-                                    </a>
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="7" style="text-align:center;">There are no orders to display</td>
-                        </tr>
-                    }
+                <tbody id="orderTableBody">
+                    <!-- Data will be loaded via AJAX -->
                 </tbody>
             </table>
-            <div class="clearfix" id="table1">
-                <div class="hint-text" id="pagination-info"></div>
-                <ul class="pagination justify-content-center"></ul>
+            <div class="clearfix">
+                <div class="hint-text" id="pagination-info">Showing <span id="currentPageEntries">0-0</span> of <span
+                        id="totalEntries">0</span> entries</div>
+                <ul class="pagination justify-content-center" id="orderPagination">
+                    <!-- Pagination will be generated dynamically -->
+                </ul>
+            </div>
+
+            <!-- Loading indicator -->
+            <div id="loadingIndicator" class="text-center my-3" style="display:none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Tick Checkbox
+    // Config ENV
+    const API_ENDPOINT = '@Model.ApiEndpoint';
+    const AUTH_TOKEN = '@Model.AuthToken';
+    const PAGE_SIZE = 5;
+
+    let currentPage = 1;
+    let totalPages = 1;
+    let totalEntries = 0;
+    let selectedItems = [];
+
+    // Khởi tạo khi trang được tải
     document.addEventListener('DOMContentLoaded', function () {
+        setupCheckboxHandlers();
+        loadOrders(1);
+    });
+
+    // Thiết lập event handlers cho checkbox
+    function setupCheckboxHandlers() {
         const selectAllCheckbox = document.getElementById('selectAll');
-        const checkboxes = document.querySelectorAll('input[type="checkbox"][name="options[]"]');
-        const hintText = document.querySelector('.hint-text');
 
-        var totalEntries = 0;
+        selectAllCheckbox.addEventListener('change', function () {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][name="options[]"]');
+            checkboxes.forEach(function (checkbox) {
+                checkbox.checked = selectAllCheckbox.checked;
 
-        // Check Total Select Entries
-    @if (Model.Orders != null)
-    {
-        <text>totalEntries = @Model.Orders.Count();</text>
-    }
-            selectAllCheckbox.addEventListener('change', function () {
-                checkboxes.forEach(function (checkbox) {
-                    checkbox.checked = selectAllCheckbox.checked;
-                });
-                updateEntryCount();
+                const orderId = checkbox.value;
+                if (selectAllCheckbox.checked) {
+                    if (!selectedItems.includes(orderId)) {
+                        selectedItems.push(orderId);
+                    }
+                } else {
+                    selectedItems = selectedItems.filter(id => id !== orderId);
+                }
             });
-        function updateEntryCount() {
-            const currentEntries = [...checkboxes].filter(checkbox => checkbox.checked).length;
-            hintText.innerHTML = `Select <b>${currentEntries}</b> out of <b>${totalEntries}</b> entries`;
-        }
 
-        updateEntryCount();
-
-        checkboxes.forEach(function (checkbox) {
-            checkbox.addEventListener('change', updateEntryCount);
-        });
-    });
-
-    // Phân trang
-    const rowsPerPage = 5;
-    let currentPage = {};
-
-    function displayPage(page, tableId) {
-        const tableRows = document.querySelectorAll(`#${tableId} tbody tr`);
-        const totalPages = Math.ceil(tableRows.length / rowsPerPage);
-
-        if (page < 1 || page > totalPages) return;
-
-        currentPage[tableId] = page;
-        const startIndex = (page - 1) * rowsPerPage;
-        const endIndex = startIndex + rowsPerPage;
-
-        tableRows.forEach((row, index) => {
-            row.style.display = (index >= startIndex && index < endIndex) ? "table-row" : "none";
+            updateSelectedCount();
         });
 
-        updatePagination(tableId, totalPages);
-        document.getElementById(`pagination-info-${tableId}`).innerText = `Page ${currentPage[tableId]} of ${totalPages}`;
+        document.addEventListener('click', function (e) {
+            if (e.target && e.target.type === 'checkbox' && e.target.name === 'options[]') {
+                const orderId = e.target.value;
+                if (e.target.checked) {
+                    if (!selectedItems.includes(orderId)) {
+                        selectedItems.push(orderId);
+                    }
+                } else {
+                    selectedItems = selectedItems.filter(id => id !== orderId);
+                    document.getElementById('selectAll').checked = false;
+                }
+
+                updateSelectedCount();
+            }
+        });
     }
 
-    function updatePagination(tableId, totalPages) {
-        const pagination = document.querySelector(`#${tableId} .pagination`);
-        pagination.innerHTML = `
-                    <li class="page-item ${currentPage[tableId] === 1 ? "disabled" : ""}">
-                        <a class="page-link" href="#" onclick="displayPage(currentPage['${tableId}'] - 1, '${tableId}')">Previous</a>
-                    </li>
-                `;
-
-        for (let i = 1; i <= totalPages; i++) {
-            pagination.innerHTML += `
-                        <li class="page-item ${currentPage[tableId] === i ? "active" : ""}">
-                            <a class="page-link" href="#" onclick="displayPage(${i}, '${tableId}')">${i}</a>
-                        </li>
-                    `;
+    // Cập nhật số lượng mục đã chọn
+    function updateSelectedCount() {
+        const hintText = document.querySelector('.hint-text');
+        if (totalEntries > 0) {
+            hintText.innerHTML = `Showing <span id="currentPageEntries">${document.getElementById('currentPageEntries').textContent}</span> of <span id="totalEntries">${totalEntries}</span> entries`;
         }
-
-        pagination.innerHTML += `
-                    <li class="page-item ${currentPage[tableId] === totalPages ? "disabled" : ""}">
-                        <a class="page-link" href="#" onclick="displayPage(currentPage['${tableId}'] + 1, '${tableId}')">Next</a>
-                    </li>
-                `;
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const tables = document.querySelectorAll("table");
+    function loadOrders(page) {
+        currentPage = page;
+        const skip = (page - 1) * PAGE_SIZE;
 
-        tables.forEach(table => {
-            const tableId = table.getAttribute("id");
-            if (!tableId) return;
+        document.getElementById('loadingIndicator').style.display = 'block';
 
-            currentPage[tableId] = 1;
-            displayPage(1, tableId);
-        });
-    });
+        const odataQuery = `$top=${PAGE_SIZE}&$skip=${skip}&$orderby=id desc`;
+
+        console.log('Request URL:', `${API_ENDPOINT}/api/orders?${odataQuery}`);
+
+        fetch(`${API_ENDPOINT}/api/orders?${odataQuery}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${AUTH_TOKEN}`,
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/Login/Index';
+                    }
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+
+                let orders = [];
+
+                try {
+                    if (data === null || data === undefined) {
+                        throw new Error('API returned null or undefined data');
+                    }
+
+                    if (Array.isArray(data)) {
+                        orders = data;
+                    } else if (typeof data === 'object') {
+                        if (Array.isArray(data.value)) {
+                            orders = data.value;
+                        } else if (Array.isArray(data.items)) {
+                            orders = data.items;
+                        } else if (Array.isArray(data.data)) {
+                            orders = data.data;
+                        } else {
+                            throw new Error('Unexpected data structure: ' + JSON.stringify(data));
+                        }
+                    } else {
+                        throw new Error('Unexpected data type: ' + typeof data);
+                    }
+
+                    let count = data.count || data.totalCount;
+
+                    if (!count) {
+                        const hasMoreData = orders.length === PAGE_SIZE;
+                        count = hasMoreData ? (page * PAGE_SIZE) + PAGE_SIZE : (page - 1) * PAGE_SIZE + orders.length;
+                    }
+
+                    totalEntries = count;
+                    totalPages = Math.ceil(totalEntries / PAGE_SIZE);
+
+                    displayOrders(orders);
+                } catch (error) {
+                    console.error('Error processing data:', error);
+                    displayErrorMessage('Error processing data: ' + error.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading orders:', error);
+                displayErrorMessage('Failed to load orders: ' + error.message);
+            })
+            .finally(() => {
+                document.getElementById('loadingIndicator').style.display = 'none';
+            });
+    }
+
+    // Hàm hiển thị dữ liệu đơn hàng trên trang
+    function displayOrders(orders) {
+        const tableBody = document.getElementById('orderTableBody');
+        tableBody.innerHTML = '';
+
+        if (!orders || orders.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align:center;">There are no orders to display</td>
+                </tr>
+            `;
+            updatePaginationInfo(0, 0);
+        } else {
+            orders.forEach(order => {
+                const orderId = String(order.id);
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <span class="custom-checkbox">
+                            <input type="checkbox" id="checkbox${orderId}" name="options[]" value="${orderId}" ${selectedItems.includes(orderId) ? 'checked' : ''}>
+                            <label for="checkbox${orderId}"></label>
+                        </span>
+                    </td>
+                    <td>${order.customer?.name || 'N/A'}</td>
+                    <td>${order.paymentMethod || 'N/A'}</td>
+                    <td>${order.orderStatus || order.status || 'N/A'}</td>
+                    <td>${formatCurrency(order.totalPrice || 0)}</td>
+                    <td>${formatDate(order.orderDate)}</td>
+                    <td>
+                        <a href="/Order/UpdateOrder/${orderId}" class="edit" data-toggle="modal">
+                            <i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i>
+                        </a>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            const start = (currentPage - 1) * PAGE_SIZE + 1;
+            const end = Math.min(start + orders.length - 1, totalEntries);
+            updatePaginationInfo(start, end);
+        }
+
+        updatePagination();
+    }
+
+    // Cập nhật thông tin phân trang
+    function updatePaginationInfo(start, end) {
+        document.getElementById('currentPageEntries').textContent = `${start}-${end}`;
+        document.getElementById('totalEntries').textContent = totalEntries;
+    }
+
+    // Cập nhật UI phân trang
+    function updatePagination() {
+        const pagination = document.getElementById('orderPagination');
+        pagination.innerHTML = '';
+
+        // Nút Previous
+        const prevButton = document.createElement('li');
+        prevButton.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+        prevButton.innerHTML = `<a class="page-link" href="javascript:void(0)" ${currentPage > 1 ? 'onclick="loadOrders(' + (currentPage - 1) + ')"' : ''}>Previous</a>`;
+        pagination.appendChild(prevButton);
+
+        // Các nút số trang
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, startPage + 4);
+
+        for (let i = startPage; i <= endPage; i++) {
+            const pageButton = document.createElement('li');
+            pageButton.className = `page-item ${i === currentPage ? 'active' : ''}`;
+            pageButton.innerHTML = `<a class="page-link" href="javascript:void(0)" onclick="loadOrders(${i})">${i}</a>`;
+            pagination.appendChild(pageButton);
+        }
+
+        // Nút Next
+        const nextButton = document.createElement('li');
+        nextButton.className = `page-item ${currentPage >= totalPages ? 'disabled' : ''}`;
+        nextButton.innerHTML = `<a class="page-link" href="javascript:void(0)" ${currentPage < totalPages ? 'onclick="loadOrders(' + (currentPage + 1) + ')"' : ''}>Next</a>`;
+        pagination.appendChild(nextButton);
+    }
+
+    // Hiển thị thông báo lỗi
+    function displayErrorMessage(message) {
+        const tableBody = document.getElementById('orderTableBody');
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align:center; color: red;">
+                    ${message}
+                </td>
+            </tr>
+        `;
+
+        document.getElementById('orderPagination').innerHTML = '';
+        updatePaginationInfo(0, 0);
+    }
+
+    // Định dạng số tiền
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('en-EN', {
+            style: 'currency',
+            currency: 'USD'
+        }).format(value);
+    }
+
+    // Định dạng ngày tháng
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+    }
 </script>
