@@ -1,9 +1,8 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Newtonsoft.Json;
-using TechLap.API;
-using TechLap.API.DTOs.Responses.ProductDTOs;
 using System.Net.Http.Headers;
+using TechLap.API;
 using TechLap.API.Models;
 
 namespace TechLap.Razor.Pages.Product
@@ -13,9 +12,10 @@ namespace TechLap.Razor.Pages.Product
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<IndexModel> _logger;
         private readonly IConfiguration _configuration;
-        [BindProperty]
-        public ProductResponse Product { get; set; }
-        public List<ProductResponse>? Products { get; set; }
+
+        public string ApiEndpoint { get; private set; } = string.Empty;
+        public string AuthToken { get; private set; } = string.Empty;
+        public List<Category> Categories { get; set; } = new List<Category>();
         public string? ErrorMessage { get; set; }
 
         public IndexModel(ILogger<IndexModel> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
@@ -24,107 +24,31 @@ namespace TechLap.Razor.Pages.Product
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
         }
-        public List<Category> Categories { get; set; } = new List<Category>();
+
         public async Task<IActionResult> OnGet()
         {
-            if (!await IsAuthorizedAsync())
+            var token = Request.Cookies["AuthToken"];
+            if (string.IsNullOrEmpty(token))
             {
                 Response.Cookies.Delete("AuthToken");
                 return RedirectToPage("/Login/Index");
             }
 
-            Products = await LoadProductsAsync();
-            Categories = await LoadCategoriesAsync();
-            return Page();
-        }
-        public async Task<List<Category>> LoadCategoriesAsync()
-        {
-            var token = Request.Cookies["AuthToken"];
-            var client = _httpClientFactory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            string apiEndpoint = $"{_configuration["ApiEndPoint"]}/api/categories/";
-
-            try
+            if (!await IsAuthorizedAsync(token))
             {
-                var response = await client.GetAsync(apiEndpoint);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var responseBody = await response.Content.ReadAsStringAsync();
-                    var apiResponse = JsonConvert.DeserializeObject<ApiResponse<List<Category>>>(responseBody);
-                    return apiResponse?.Data ?? new List<Category>();
-                }
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, "An error occurred while loading categories.");
+                Response.Cookies.Delete("AuthToken");
+                return RedirectToPage("/Login/Index");
             }
 
-            return new List<Category>();
-        }
-        public async Task<IActionResult> OnPost(ProductResponse newProduct)
-        {
-            if (!ModelState.IsValid)
-            {
-                ErrorMessage = "Invalid product data.";
-                return Page();
-            }
+            AuthToken = token;
+            ApiEndpoint = _configuration["ApiEndPoint"] ?? string.Empty;
+            Categories = await LoadCategoriesAsync(token);
 
-            var token = Request.Cookies["AuthToken"];
-            var client = _httpClientFactory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            string apiEndpoint = $"{_configuration["ApiEndPoint"]}/api/products";
-
-            try
-            {
-                var jsonContent = JsonConvert.SerializeObject(newProduct);
-                var response = await client.PostAsync(apiEndpoint, new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json"));
-
-                if (response.IsSuccessStatusCode)
-                {
-                    return RedirectToPage();
-                }
-
-                ErrorMessage = "Failed to add product.";
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, "Error adding product.");
-                ErrorMessage = "An error occurred. Please try again later.";
-            }
             return Page();
         }
 
-        public async Task<IActionResult> OnGetDelete(int? id)
+        private async Task<bool> IsAuthorizedAsync(string token)
         {
-            var token = Request.Cookies["AuthToken"];
-            var client = _httpClientFactory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            string apiEndpoint = $"{_configuration["ApiEndPoint"]}/odata/product/{id}";
-
-            try
-            {
-                var response = await client.DeleteAsync(apiEndpoint);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    Products = await LoadProductsAsync();
-                    return RedirectToPage();
-                }
-
-                ErrorMessage = "Failed to delete product.";
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, "Error deleting product.");
-                ErrorMessage = "An error occurred. Please try again later.";
-            }
-            return Page();
-        }
-
-        private async Task<bool> IsAuthorizedAsync()
-        {
-            var token = Request.Cookies["AuthToken"];
             if (string.IsNullOrEmpty(token))
             {
                 _logger.LogWarning("Token is missing in the request.");
@@ -132,7 +56,7 @@ namespace TechLap.Razor.Pages.Product
             }
 
             var client = _httpClientFactory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
             string? apiEndpoint = _configuration["ApiEndPoint"];
 
             try
@@ -152,38 +76,32 @@ namespace TechLap.Razor.Pages.Product
             {
                 _logger.LogError(ex, "An error occurred while validating the token.");
             }
+
             return false;
         }
 
-        private async Task<List<ProductResponse>?> LoadProductsAsync()
+        private async Task<List<Category>> LoadCategoriesAsync(string token)
         {
-            var token = Request.Cookies["AuthToken"];
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            string? apiEndpoint = _configuration["ApiEndPoint"];
+            string apiEndpoint = $"{_configuration["ApiEndPoint"]}/api/categories/";
 
             try
             {
-                var response = await client.GetAsync($"{apiEndpoint}/odata/product");
-
+                var response = await client.GetAsync(apiEndpoint);
                 if (response.IsSuccessStatusCode)
                 {
                     var responseBody = await response.Content.ReadAsStringAsync();
-                    var products = JsonConvert.DeserializeObject<List<ProductResponse>>(responseBody);
-                    return products;
-                }
-                else
-                {
-                    _logger.LogError("API call failed with status code: {StatusCode}", response.StatusCode);
-                    ErrorMessage = "Failed to load products. Please try again later.";
+                    var apiResponse = JsonConvert.DeserializeObject<ApiResponse<List<Category>>>(responseBody);
+                    return apiResponse?.Data ?? new List<Category>();
                 }
             }
             catch (HttpRequestException ex)
             {
-                _logger.LogError(ex, "An error occurred while loading products.");
-                ErrorMessage = "An error occurred. Please try again later.";
+                _logger.LogError(ex, "An error occurred while loading categories.");
+                ErrorMessage = "Failed to load categories.";
             }
-            return null;
+            return new List<Category>();
         }
     }
 }

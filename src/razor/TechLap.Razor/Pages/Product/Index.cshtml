@@ -7,6 +7,9 @@
 <head>
     <link href="~/css/order.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- jQuery và Bootstrap JS để đóng modal -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 
 <div class="container-xl">
@@ -20,14 +23,24 @@
                     <div class="col-sm-6">
                         <a href="#addProductModal" class="btn btn-success" data-toggle="modal">
                             <i class="material-icons" style="vertical-align: middle; margin-right: 5px;">add</i>
-                            <span>Add New Order</span>
+                            <span>Add New Product</span>
                         </a>
                     </div>
                 </div>
             </div>
-            <table class="table table-striped table-hover" id="table1">
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger">@Model.ErrorMessage</div>
+            }
+            <table class="table table-striped table-hover" id="productTable">
                 <thead>
                     <tr>
+                        <th>
+                            <span class="custom-checkbox">
+                                <input type="checkbox" id="selectAll">
+                                <label for="selectAll"></label>
+                            </span>
+                        </th>
                         <th>ID</th>
                         <th>Brand</th>
                         <th>Model</th>
@@ -39,44 +52,22 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @if (Model.Products != null && Model.Products.Any())
-                    {
-                        @foreach (var product in Model.Products)
-                        {
-                            <tr>
-                                <td>@product.Id</td>
-                                <td>@product.Brand</td>
-                                <td>@product.Model</td>
-                                <td>@product.Cpu</td>
-                                <td>@product.Vga</td>
-                                <td>@product.Ram</td>
-                                <td>@product.Price.ToString("C")</td>
-                                <td>@product.Stock</td>
-                                <td>
-                                    <a asp-page="./Edit" asp-route-id="@product.Id">
-                                        <i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i>
-                                    </a>
-                                    <a onclick="return confirm
-                                        ('Are you sure you want to delete this item?');"
-                                       asp-page-handler="Delete" asp-route-id="@product.Id">
-                                        <i class="material-icons" data-toggle="tooltip" title="Delete">&#xE872;</i>
-                                    </a>
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="7" style="text-align:center;">There are no orders to display</td>
-                        </tr>
-                    }
+                <tbody id="productTableBody">
+                    <!-- Data will be loaded via AJAX -->
                 </tbody>
             </table>
-            <div class="clearfix" id="table1">
-                <div class="hint-text" id="pagination-info"></div>
-                <ul class="pagination justify-content-center"></ul>
+            <div class="clearfix">
+                <div class="hint-text" id="pagination-info">Showing <span id="currentPageEntries">0-0</span> of <span id="totalEntries">0</span> entries</div>
+                <ul class="pagination justify-content-center" id="productPagination">
+                    <!-- Pagination will be generated dynamically -->
+                </ul>
+            </div>
+
+            <!-- Loading indicator -->
+            <div id="loadingIndicator" class="text-center my-3" style="display:none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
             </div>
         </div>
     </div>
@@ -86,27 +77,23 @@
 <div id="addProductModal" class="modal fade">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form asp-page-handler="OnPost" method="post">
+            <form id="addProductForm">
                 <div class="modal-header">
                     <h4 class="modal-title">Add New Product</h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Brand</label>
-                        <input type="text" class="form-control" name="Brand" required>
+                        <input type="text" class="form-control" name="brand" required>
                     </div>
                     <div class="form-group">
                         <label>Model</label>
-                        <input type="text" class="form-control" name="Model" required>
-                    </div>
-                    <div class="form-group">
-                        <label>CPU</label>
-                        <input type="text" class="form-control" name="Cpu">
+                        <input type="text" class="form-control" name="model" required>
                     </div>
                     <div class="form-group">
                         <label>Category</label>
-                        <select class="form-control" name="CategoryId" required>
+                        <select class="form-control" name="categoryId" required>
                             <option value="">Select a Category</option>
                             @foreach (var category in Model.Categories)
                             {
@@ -115,41 +102,120 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label>CPU</label>
+                        <input type="text" class="form-control" name="cpu">
+                    </div>
+                    <div class="form-group">
                         <label>RAM</label>
-                        <input type="text" class="form-control" name="Ram">
+                        <input type="text" class="form-control" name="ram">
                     </div>
                     <div class="form-group">
                         <label>VGA</label>
-                        <input type="text" class="form-control" name="Vga">
+                        <input type="text" class="form-control" name="vga">
                     </div>
                     <div class="form-group">
                         <label>Screen Size</label>
-                        <input type="text" class="form-control" name="ScreenSize">
+                        <input type="text" class="form-control" name="screenSize">
                     </div>
                     <div class="form-group">
                         <label>Hard Disk</label>
-                        <input type="text" class="form-control" name="HardDisk">
+                        <input type="text" class="form-control" name="hardDisk">
                     </div>
                     <div class="form-group">
                         <label>OS</label>
-                        <input type="text" class="form-control" name="Os">
+                        <input type="text" class="form-control" name="os">
                     </div>
                     <div class="form-group">
                         <label>Price</label>
-                        <input type="number" class="form-control" name="Price" step="0.01" required>
+                        <input type="number" class="form-control" name="price" step="0.01" required>
                     </div>
                     <div class="form-group">
                         <label>Stock</label>
-                        <input type="text" class="form-control" name="Stock" required>
+                        <input type="number" class="form-control" name="stock" required>
                     </div>
                     <div class="form-group">
                         <label>Image URL</label>
-                        <input type="text" class="form-control" name="Image">
+                        <input type="text" class="form-control" name="image">
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                        <input type="submit" class="btn btn-success" value="Add" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div id="editProductModal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editProductForm">
+                <div class="modal-header">
+                    <h4 class="modal-title">Edit Product</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="id">
+                    <div class="form-group">
+                        <label>Brand</label>
+                        <input type="text" class="form-control" name="brand" required>
                     </div>
+                    <div class="form-group">
+                        <label>Model</label>
+                        <input type="text" class="form-control" name="model" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select class="form-control" name="categoryId" required>
+                            <option value="">Select a Category</option>
+                            @foreach (var category in Model.Categories)
+                            {
+                                <option value="@category.Id">@category.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>CPU</label>
+                        <input type="text" class="form-control" name="cpu">
+                    </div>
+                    <div class="form-group">
+                        <label>RAM</label>
+                        <input type="text" class="form-control" name="ram">
+                    </div>
+                    <div class="form-group">
+                        <label>VGA</label>
+                        <input type="text" class="form-control" name="vga">
+                    </div>
+                    <div class="form-group">
+                        <label>Screen Size</label>
+                        <input type="text" class="form-control" name="screenSize">
+                    </div>
+                    <div class="form-group">
+                        <label>Hard Disk</label>
+                        <input type="text" class="form-control" name="hardDisk">
+                    </div>
+                    <div class="form-group">
+                        <label>OS</label>
+                        <input type="text" class="form-control" name="os">
+                    </div>
+                    <div class="form-group">
+                        <label>Price</label>
+                        <input type="number" class="form-control" name="price" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Stock</label>
+                        <input type="number" class="form-control" name="stock" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Image URL</label>
+                        <input type="text" class="form-control" name="image">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
                 </div>
             </form>
         </div>
@@ -157,61 +223,415 @@
 </div>
 
 <script>
-    // Phân trang
-    const rowsPerPage = 5;
-    let currentPage = {};
+    // Config ENV
+    const API_ENDPOINT = '@Model.ApiEndpoint';
+    const AUTH_TOKEN = '@Model.AuthToken';
+    const PAGE_SIZE = 5;
 
-    function displayPage(page, tableId) {
-        const tableRows = document.querySelectorAll(`#${tableId} tbody tr`);
-        const totalPages = Math.ceil(tableRows.length / rowsPerPage);
+    let currentPage = 1;
+    let totalPages = 1;
+    let totalEntries = 0;
+    let selectedItems = [];
 
-        if (page < 1 || page > totalPages) return;
+    // Khởi tạo khi trang được tải
+    document.addEventListener('DOMContentLoaded', function () {
+        setupCheckboxHandlers();
+        loadProducts(1);
 
-        currentPage[tableId] = page;
-        const startIndex = (page - 1) * rowsPerPage;
-        const endIndex = startIndex + rowsPerPage;
-
-        tableRows.forEach((row, index) => {
-            row.style.display = (index >= startIndex && index < endIndex) ? "table-row" : "none";
+        // Xử lý form thêm sản phẩm
+        document.getElementById('addProductForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            addProduct();
         });
 
-        updatePagination(tableId, totalPages);
-        document.getElementById(`pagination-info-${tableId}`).innerText = `Page ${currentPage[tableId]} of ${totalPages}`;
-    }
-
-    function updatePagination(tableId, totalPages) {
-        const pagination = document.querySelector(`#${tableId} .pagination`);
-        pagination.innerHTML = `
-                        <li class="page-item ${currentPage[tableId] === 1 ? "disabled" : ""}">
-                            <a class="page-link" href="#" onclick="displayPage(currentPage['${tableId}'] - 1, '${tableId}')">Previous</a>
-                        </li>
-                    `;
-
-        for (let i = 1; i <= totalPages; i++) {
-            pagination.innerHTML += `
-                            <li class="page-item ${currentPage[tableId] === i ? "active" : ""}">
-                                <a class="page-link" href="#" onclick="displayPage(${i}, '${tableId}')">${i}</a>
-                            </li>
-                        `;
-        }
-
-        pagination.innerHTML += `
-                        <li class="page-item ${currentPage[tableId] === totalPages ? "disabled" : ""}">
-                            <a class="page-link" href="#" onclick="displayPage(currentPage['${tableId}'] + 1, '${tableId}')">Next</a>
-                        </li>
-                    `;
-    }
-
-    document.addEventListener("DOMContentLoaded", function () {
-        const tables = document.querySelectorAll("table");
-
-        tables.forEach(table => {
-            const tableId = table.getAttribute("id");
-            if (!tableId) return;
-
-            currentPage[tableId] = 1;
-            displayPage(1, tableId);
+        // Xử lý form chỉnh sửa sản phẩm
+        document.getElementById('editProductForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            saveEditedProduct();
         });
     });
-</script>
 
+    // Thiết lập event handlers cho checkbox
+    function setupCheckboxHandlers() {
+        const selectAllCheckbox = document.getElementById('selectAll');
+
+        selectAllCheckbox.addEventListener('change', function () {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][name="options[]"]');
+            checkboxes.forEach(function (checkbox) {
+                checkbox.checked = selectAllCheckbox.checked;
+
+                const productId = checkbox.value;
+                if (selectAllCheckbox.checked) {
+                    if (!selectedItems.includes(productId)) {
+                        selectedItems.push(productId);
+                    }
+                } else {
+                    selectedItems = selectedItems.filter(id => id !== productId);
+                }
+            });
+
+            updateSelectedCount();
+        });
+
+        document.addEventListener('click', function (e) {
+            if (e.target && e.target.type === 'checkbox' && e.target.name === 'options[]') {
+                const productId = e.target.value;
+                if (e.target.checked) {
+                    if (!selectedItems.includes(productId)) {
+                        selectedItems.push(productId);
+                    }
+                } else {
+                    selectedItems = selectedItems.filter(id => id !== productId);
+                    document.getElementById('selectAll').checked = false;
+                }
+
+                updateSelectedCount();
+            }
+        });
+    }
+
+    // Cập nhật số lượng mục đã chọn
+    function updateSelectedCount() {
+        const hintText = document.querySelector('.hint-text');
+        if (totalEntries > 0) {
+            hintText.innerHTML = `Showing <span id="currentPageEntries">${document.getElementById('currentPageEntries').textContent}</span> of <span id="totalEntries">${totalEntries}</span> entries`;
+        }
+    }
+
+    // Load danh sách sản phẩm
+    function loadProducts(page) {
+        currentPage = page;
+        const skip = (page - 1) * PAGE_SIZE;
+
+        document.getElementById('loadingIndicator').style.display = 'block';
+
+        // const odataQuery = `$top=${PAGE_SIZE}&$skip=${skip}&$orderby=id desc`;
+            const odataQuery = `$top=${PAGE_SIZE}&$skip=${skip}&$count=true&$orderby=id desc`;
+
+
+        fetch(`${API_ENDPOINT}/api/product?${odataQuery}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${AUTH_TOKEN}`,
+                'Content-Type': 'application/json',
+                'Accept': '*/*'
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/Login/Index';
+                    }
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                let products = [];
+
+                if (Array.isArray(data)) {
+                    products = data;
+                } else if (data.isSuccess && Array.isArray(data.data)) {
+                    products = data.data;
+                } else {
+                    throw new Error('Unexpected data structure: ' + JSON.stringify(data));
+                }
+
+                let count = data.totalCount || data.count || (products.length === PAGE_SIZE ? (page * PAGE_SIZE) + PAGE_SIZE : (page - 1) * PAGE_SIZE + products.length);
+                if (!count) {
+                    const hasMoreData = products.length === PAGE_SIZE;
+                    count = hasMoreData ? (page * PAGE_SIZE) + PAGE_SIZE : (page - 1) * PAGE_SIZE + products.length;
+                }
+
+                totalEntries = count;
+                totalPages = Math.ceil(totalEntries / PAGE_SIZE);
+
+                displayProducts(products);
+            })
+            .catch(error => {
+                console.error('Error loading products:', error);
+                displayErrorMessage('Failed to load products: ' + error.message);
+            })
+            .finally(() => {
+                document.getElementById('loadingIndicator').style.display = 'none';
+            });
+    }
+
+    // Hiển thị danh sách sản phẩm
+    function displayProducts(products) {
+        const tableBody = document.getElementById('productTableBody');
+        tableBody.innerHTML = '';
+
+        if (!products || products.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="10" style="text-align:center;">There are no products to display</td>
+                </tr>
+            `;
+            updatePaginationInfo(0, 0);
+        } else {
+            products.forEach(product => {
+                const productId = String(product.id);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <span class="custom-checkbox">
+                            <input type="checkbox" id="checkbox${productId}" name="options[]" value="${productId}" ${selectedItems.includes(productId) ? 'checked' : ''}>
+                            <label for="checkbox${productId}"></label>
+                        </span>
+                    </td>
+                    <td>${product.id}</td>
+                    <td>${product.brand || 'N/A'}</td>
+                    <td>${product.model || 'N/A'}</td>
+                    <td>${product.cpu || 'N/A'}</td>
+                    <td>${product.vga || 'N/A'}</td>
+                    <td>${product.ram || 'N/A'}</td>
+                    <td>${formatCurrency(product.price || 0)}</td>
+                    <td>${product.stock || 0}</td>
+                    <td>
+                        <a href="javascript:void(0)" onclick="openEditProductModal(${productId})" class="edit">
+                            <i class="material-icons" data-toggle="tooltip" title="Edit"></i>
+                        </a>
+                        <a href="javascript:void(0)" onclick="deleteProduct(${productId})">
+                            <i class="material-icons" data-toggle="tooltip" title="Delete"></i>
+                        </a>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            const start = (currentPage - 1) * PAGE_SIZE + 1;
+            const end = Math.min(start + products.length - 1, totalEntries);
+            updatePaginationInfo(start, end);
+        }
+
+        updatePagination();
+    }
+
+    // Thêm sản phẩm mới
+    function addProduct() {
+        const form = document.getElementById('addProductForm');
+        const formData = {
+            brand: form.querySelector('[name="brand"]').value,
+            model: form.querySelector('[name="model"]').value,
+            categoryId: parseInt(form.querySelector('[name="categoryId"]').value),
+            cpu: form.querySelector('[name="cpu"]').value || null,
+            ram: form.querySelector('[name="ram"]').value || null,
+            vga: form.querySelector('[name="vga"]').value || null,
+            screenSize: form.querySelector('[name="screenSize"]').value || null,
+            hardDisk: form.querySelector('[name="hardDisk"]').value || null,
+            os: form.querySelector('[name="os"]').value || null,
+            price: parseFloat(form.querySelector('[name="price"]').value),
+            stock: parseInt(form.querySelector('[name="stock"]').value),
+            image: form.querySelector('[name="image"]').value || null
+        };
+
+        fetch(`${API_ENDPOINT}/api/products`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${AUTH_TOKEN}`,
+                'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
+                'Accept': '*/*'
+            },
+            body: JSON.stringify(formData)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.isSuccess) {
+                    $('#addProductModal').modal('hide');
+                    form.reset();
+                    loadProducts(currentPage);
+                } else {
+                    alert('Failed to add product: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error adding product:', error);
+                alert('An error occurred while adding the product.');
+            });
+    }
+
+    // Mở modal chỉnh sửa sản phẩm và điền dữ liệu
+    function openEditProductModal(productId) {
+        fetch(`${API_ENDPOINT}/api/products/${productId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${AUTH_TOKEN}`,
+                'Accept': '*/*'
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const product = data.isSuccess ? data.data : data;
+                const form = document.getElementById('editProductForm');
+                form.querySelector('[name="id"]').value = product.id || '';
+                form.querySelector('[name="brand"]').value = product.brand || '';
+                form.querySelector('[name="model"]').value = product.model || '';
+                form.querySelector('[name="categoryId"]').value = product.categoryId || '';
+                form.querySelector('[name="cpu"]').value = product.cpu || '';
+                form.querySelector('[name="ram"]').value = product.ram || '';
+                form.querySelector('[name="vga"]').value = product.vga || '';
+                form.querySelector('[name="screenSize"]').value = product.screenSize || '';
+                form.querySelector('[name="hardDisk"]').value = product.hardDisk || '';
+                form.querySelector('[name="os"]').value = product.os || '';
+                form.querySelector('[name="price"]').value = product.price || 0;
+                form.querySelector('[name="stock"]').value = product.stock || 0;
+                form.querySelector('[name="image"]').value = product.image || '';
+
+                $('#editProductModal').modal('show');
+            })
+            .catch(error => {
+                console.error('Error fetching product:', error);
+                alert('An error occurred while loading the product data.');
+            });
+    }
+
+    // Lưu sản phẩm đã chỉnh sửa
+    function saveEditedProduct() {
+        const form = document.getElementById('editProductForm');
+        const productId = form.querySelector('[name="id"]').value;
+        const formData = {
+            id: parseInt(productId),
+            brand: form.querySelector('[name="brand"]').value,
+            model: form.querySelector('[name="model"]').value,
+            categoryId: parseInt(form.querySelector('[name="categoryId"]').value),
+            cpu: form.querySelector('[name="cpu"]').value || null,
+            ram: form.querySelector('[name="ram"]').value || null,
+            vga: form.querySelector('[name="vga"]').value || null,
+            screenSize: form.querySelector('[name="screenSize"]').value || null,
+            hardDisk: form.querySelector('[name="hardDisk"]').value || null,
+            os: form.querySelector('[name="os"]').value || null,
+            price: parseFloat(form.querySelector('[name="price"]').value),
+            stock: parseInt(form.querySelector('[name="stock"]').value),
+            image: form.querySelector('[name="image"]').value || null
+        };
+
+        fetch(`${API_ENDPOINT}/api/products/${productId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${AUTH_TOKEN}`,
+                'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
+                'Accept': '*/*'
+            },
+            body: JSON.stringify(formData)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.isSuccess) {
+                    $('#editProductModal').modal('hide');
+                    loadProducts(currentPage);
+                } else {
+                    alert('Failed to update product: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating product:', error);
+                alert('An error occurred while updating the product.');
+            });
+    }
+
+    // Xóa sản phẩm
+    function deleteProduct(productId) {
+        if (confirm('Are you sure you want to delete this product?')) {
+            fetch(`${API_ENDPOINT}/api/products/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${AUTH_TOKEN}`,
+                    'Accept': '*/*'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.isSuccess) {
+                        loadProducts(currentPage);
+                        selectedItems = selectedItems.filter(id => id !== String(productId));
+                        updateSelectedCount();
+                    } else {
+                        alert('Failed to delete product: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting product:', error);
+                    alert('An error occurred while deleting the product.');
+                });
+        }
+    }
+
+    // Cập nhật thông tin phân trang
+    function updatePaginationInfo(start, end) {
+        document.getElementById('currentPageEntries').textContent = `${start}-${end}`;
+        document.getElementById('totalEntries').textContent = totalEntries;
+    }
+
+    // Cập nhật UI phân trang
+    function updatePagination() {
+        const pagination = document.getElementById('productPagination');
+        pagination.innerHTML = '';
+
+        // Nút Previous
+        const prevButton = document.createElement('li');
+        prevButton.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+        prevButton.innerHTML = `<a class="page-link" href="javascript:void(0)" ${currentPage > 1 ? 'onclick="loadProducts(' + (currentPage - 1) + ')"' : ''}>Previous</a>`;
+        pagination.appendChild(prevButton);
+
+        // Các nút số trang
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, startPage + 4);
+
+        for (let i = startPage; i <= endPage; i++) {
+            const pageButton = document.createElement('li');
+            pageButton.className = `page-item ${i === currentPage ? 'active' : ''}`;
+            pageButton.innerHTML = `<a class="page-link" href="javascript:void(0)" onclick="loadProducts(${i})">${i}</a>`;
+            pagination.appendChild(pageButton);
+        }
+
+        // Nút Next
+        const nextButton = document.createElement('li');
+        nextButton.className = `page-item ${currentPage >= totalPages ? 'disabled' : ''}`;
+        nextButton.innerHTML = `<a class="page-link" href="javascript:void(0)" ${currentPage < totalPages ? 'onclick="loadProducts(' + (currentPage + 1) + ')"' : ''}>Next</a>`;
+        pagination.appendChild(nextButton);
+    }
+
+    // Hiển thị thông báo lỗi
+    function displayErrorMessage(message) {
+        const tableBody = document.getElementById('productTableBody');
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="10" style="text-align:center; color: red;">
+                    ${message}
+                </td>
+            </tr>
+        `;
+
+        document.getElementById('productPagination').innerHTML = '';
+        updatePaginationInfo(0, 0);
+    }
+
+    // Định dạng số tiền
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD' // Thay đổi thành 'VND' nếu cần
+        }).format(value);
+    }
+</script>
