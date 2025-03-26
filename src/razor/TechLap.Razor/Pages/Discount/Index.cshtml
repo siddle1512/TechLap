@@ -102,7 +102,7 @@ ViewData["Title"] = "Manage Promotions";
                     </div>
                     <div class="form-group">
                         <label>Start Date</label>
-                        <input type="date" class="form-control" name=">startDate" required>
+                        <input type="date" class="form-control" name="startDate" >
                     </div>
                     <div class="form-group">
                         <label>End Date</label>
@@ -112,10 +112,10 @@ ViewData["Title"] = "Manage Promotions";
                         <label>Usage Limit</label>
                         <input type="number" class="form-control" name="usageLimit">
                     </div>
-                    <div class="form-group">
-                        <label>Times Used</label>
-                        <input type="number" class="form-control" name="timesUsed">
-                    </div>
+                    @* <div class="form-group"> *@
+                    @*     <label>Times Used</label> *@
+                    @*     <input type="number" class="form-control" name="timesUsed"> *@
+                    @* </div> *@
                     <label for="status">Status</label>
                     <select class="form-control" name="status">
                         @foreach (var discountStatus in Enum.GetValues(typeof(DiscountStatus)))
@@ -377,21 +377,23 @@ ViewData["Title"] = "Manage Promotions";
     function addDiscount() {
         const form = document.getElementById('addDiscountForm');
         const formData = {
-            discountCode: form.querySelector('[name="discountCode"]').value,
-            discountPercentage: form.querySelector('[name="discountPercentage"]').value,
-            startDate: form.querySelector('[name="startDate"]').value,
-            endDate: form.querySelector('[name="endDate"]').value || null,
-            usageLimit: form.querySelector('[name="usageLimit"]').value || null,
-            timesUsed: form.querySelector('[name="timesUsed"]').value || null,
-            screenSize: form.querySelector('[name="screenSize"]').value || null,
-            status: form.querySelector('[name="status"]').value || null
+            discountCode: form.querySelector('[name="discountCode"]').value.trim(),
+            discountPercentage: parseFloat(form.querySelector('[name="discountPercentage"]').value) || 0,
+            startDate: form.querySelector('[name="startDate"]').value
+                ? new Date(form.querySelector('[name="startDate"]').value).toISOString()
+                : null,
+            endDate: form.querySelector('[name="endDate"]').value
+                ? new Date(form.querySelector('[name="endDate"]').value).toISOString()
+                : null,
+            usageLimit: parseInt(form.querySelector('[name="usageLimit"]').value) || 0,
+            status: form.querySelector('[name="status"]').value == "Active" ? 1 : 0 // Ensure it matches the enum value
         };
 
         fetch(`${API_ENDPOINT}/api/discounts/create`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${AUTH_TOKEN}`,
-                'Content-Type': 'application/json;odata.metadata=minimal;odata.streaming=true',
+                'Content-Type': 'application/json',
                 'Accept': '*/*'
             },
             body: JSON.stringify(formData)
@@ -577,4 +579,4 @@ ViewData["Title"] = "Manage Promotions";
         document.getElementById('discountPagination').innerHTML = '';
         updatePaginationInfo(0, 0);
     }
-</script>
+</script>        
