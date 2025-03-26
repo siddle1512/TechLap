@@ -386,7 +386,7 @@ ViewData["Title"] = "Manage Promotions";
                 ? new Date(form.querySelector('[name="endDate"]').value).toISOString()
                 : null,
             usageLimit: parseInt(form.querySelector('[name="usageLimit"]').value) || 0,
-            status: form.querySelector('[name="status"]').value == "Active" ? 1 : 0 // Ensure it matches the enum value
+            status: form.querySelector('[name="status"]').value == "Active" ? 0 : 1 // Ensure it matches the enum value
         };
 
         fetch(`${API_ENDPOINT}/api/discounts/create`, {
